@@ -3,7 +3,9 @@
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
 { config, pkgs, ... }:
-
+let
+  user = "sunny";
+in
 {
   imports =
     [ # Include the results of the hardware scan.
@@ -97,7 +99,9 @@
       useOSProber = true;
       #efiInstallAsRemovable = true; # in case canTouchEfiVariables doesn't work for your system
       device = "nodev";
+      configurationLimit = 10;
     };
+    timeout = 5;
     # Disable systemd-boot
     systemd-boot.enable = false;
   };
@@ -106,7 +110,7 @@
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_xanmod_stable;
   boot.kernelParams = ["nvidia.Nvreg_PreserveVideoMemoryAllocations=1" "nvidia-drm.modeset=1"];
-  networking.hostName = "nixos"; # Define your hostname.
+  networking.hostName = "acer-aspire"; # Define your hostname.
   #networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # Configure network proxy if necessary
@@ -115,7 +119,8 @@
 
   # Enable networking
   networking.networkmanager.enable = true;
-
+  #networking.useDHCP = true;
+  networking.nameservers = ["1.1.1.1" "8.8.8.8"];
 
   # Set your time zone.
   time.timeZone = "Asia/Kolkata";
@@ -257,4 +262,28 @@
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "25.11"; # Did you read the comment?
 
+  nix.settings.experimental-features = ["nix-command" "flakes"];
+    # ...
+
+  # Limit the number of generations to keep
+  # boot.loader.systemd-boot.configurationLimit = 10;
+
+#   system.autoUpgrade ={
+#     enable = true
+#     channel = "https://nixos.org/channels/nixos-25.11"
+#   };
+
+  # Perform garbage collection weekly to maintain low disk usage
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 7d";
+  };
+
+  # Optimize storage
+  # You can also manually optimize the store via:
+  #    nix-store --optimise
+  # Refer to the following link for more details:
+  # https://nixos.org/manual/nix/stable/command-ref/conf-file.html#conf-auto-optimise-store
+  nix.settings.auto-optimise-store = true;
 }
