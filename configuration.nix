@@ -286,4 +286,9 @@ in
   # Refer to the following link for more details:
   # https://nixos.org/manual/nix/stable/command-ref/conf-file.html#conf-auto-optimise-store
   nix.settings.auto-optimise-store = true;
+
+  nix = {
+  #package = pkg.nixFllakes;
+  extraOptions = "experimental-features = nix-command flakes";
+  };
 }
