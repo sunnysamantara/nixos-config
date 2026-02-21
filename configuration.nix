@@ -14,6 +14,11 @@ in
 
   #Nvidia
 
+    programs.nvf = {
+    enable = true;
+  };
+
+
   # Enable OpenGL
   hardware.graphics = {
     enable = true;
