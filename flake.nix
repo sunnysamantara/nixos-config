@@ -10,7 +10,7 @@
     nvf.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-    outputs = inputs@{ nixpkgs, home-manager, nvf, ... }: {
+    outputs = { nixpkgs, home-manager, nvf, ... }@inputs: {
     nixosConfigurations = {
       acer-aspire = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";

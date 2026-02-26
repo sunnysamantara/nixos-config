@@ -1,4 +1,4 @@
-# Edit this configuration file to define what should be installed on
+#coiguration file to define what should be installed on
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
@@ -7,16 +7,14 @@ let
   user = "sunny";
 in
 {
-  imports =
-    [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-    ];
+  imports = [
+    # Include the results of the hardware scan.
+    ./hardware-configuration.nix
+    ./app/nvf_neovim.nix
+  ];
 
   #Nvidia
 
-    programs.nvf = {
-    enable = true;
-  };
 
 
   # Enable OpenGL
@@ -28,8 +26,14 @@ in
   # For offloading, `modesetting` is needed additionally,
   # otherwise the X-server will be running permanently on nvidia,
   # thus keeping the GPU always on (see `nvidia-smi`).
-  services.xserver.videoDrivers = ["nvidia" "modesetting"];
-
+  services.xserver.videoDrivers = [
+    "nvidia"
+    "modesetting"
+  ];
+ 
+services ={
+fstrim.enable = true;
+};
   hardware.nvidia = {
 
     # Modesetting is required.
@@ -39,16 +43,16 @@ in
     # Enable this if you have graphical corruption issues or application crashes after waking
     # up from sleep. This fixes it by saving the entire VRAM memory to /tmp/ instead
     # of just the bare essentials.
-    powerManagement.enable = false;
+    powerManagement.enable = true;
 
     # Fine-grained power management. Turns off GPU when not in use.
     # Experimental and only works on modern Nvidia GPUs (Turing or newer).
     powerManagement.finegrained = false;
     prime = {
-    sync.enable = true;
-    # Make sure to use the correct Bus ID values for your system!
-    intelBusId = "PCI:0:2:0";
-    nvidiaBusId = "PCI:1:0:0";
+      sync.enable = true;
+      # Make sure to use the correct Bus ID values for your system!
+      intelBusId = "PCI:0:2:0";
+      nvidiaBusId = "PCI:1:0:0";
     };
 
     # Use the NVidia open source kernel module (not to be confused with the
@@ -60,7 +64,7 @@ in
     open = false;
 
     # Enable the Nvidia settings menu,
-	# accessible via `nvidia-settings`.
+    # accessible via `nvidia-settings`.
     nvidiaSettings = true;
 
     # Optionally, you may need to select the appropriate driver version for your specific GPU.
@@ -71,26 +75,26 @@ in
 
   #bluetooth
   hardware.bluetooth = {
-  enable = true;
-  powerOnBoot = true;
-  settings = {
-    General = {
-      # Shows battery charge of connected devices on supported
-      # Bluetooth adapters. Defaults to 'false'.
-      Experimental = true;
-      # When enabled other devices can connect faster to us, however
-      # the tradeoff is increased power consumption. Defaults to
-      # 'false'.
-      FastConnectable = true;
-    };
-    Policy = {
-      # Enable all controllers when they are found. This includes
-      # adapters present on start as well as adapters that are plugged
-      # in later on. Defaults to 'true'.
-      AutoEnable = true;
+    enable = true;
+    powerOnBoot = true;
+    settings = {
+      General = {
+        # Shows battery charge of connected devices on supported
+        # Bluetooth adapters. Defaults to 'false'.
+        Experimental = true;
+        # When enabled other devices can connect faster to us, however
+        # the tradeoff is increased power consumption. Defaults to
+        # 'false'.
+        FastConnectable = true;
+      };
+      Policy = {
+        # Enable all controllers when they are found. This includes
+        # adapters present on start as well as adapters that are plugged
+        # in later on. Defaults to 'true'.
+        AutoEnable = true;
+      };
     };
   };
-};
 
   # Bootloader.
   boot.loader = {
@@ -111,10 +115,12 @@ in
     systemd-boot.enable = false;
   };
 
-
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_xanmod_stable;
-  boot.kernelParams = ["nvidia.Nvreg_PreserveVideoMemoryAllocations=1" "nvidia-drm.modeset=1"];
+  boot.kernelParams = [
+    "nvidia.Nvreg_PreserveVideoMemoryAllocations=1"
+    "nvidia-drm.modeset=1"
+  ];
   networking.hostName = "acer-aspire"; # Define your hostname.
   #networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
@@ -125,7 +131,10 @@ in
   # Enable networking
   networking.networkmanager.enable = true;
   #networking.useDHCP = true;
-  networking.nameservers = ["1.1.1.1" "8.8.8.8"];
+  networking.nameservers = [
+    "1.1.1.1"
+    "8.8.8.8"
+  ];
 
   # Set your time zone.
   time.timeZone = "Asia/Kolkata";
@@ -154,7 +163,6 @@ in
   services.desktopManager.plasma6.enable = true;
   services.displayManager.sddm.wayland.enable = true;
   services.displayManager.sddm.settings.General.DisplayServer = "wayland";
-
 
   # Configure keymap in X11
   services.xserver.xkb = {
@@ -188,7 +196,10 @@ in
   users.users.sunny = {
     isNormalUser = true;
     description = "sunny";
-    extraGroups = [ "networkmanager" "wheel" ];
+    extraGroups = [
+      "networkmanager"
+      "wheel"
+    ];
     packages = with pkgs; [
       bitwarden-desktop
       libreoffice-qt-fresh
@@ -236,10 +247,13 @@ in
     qpwgraph
     wayland-utils
     wl-clipboard
-    neovim
+    #neovim
     git
   ];
 
+  programs.neovim = {
+    enable = true;
+  };
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   # programs.mtr.enable = true;
@@ -267,16 +281,19 @@ in
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "25.11"; # Did you read the comment?
 
-  nix.settings.experimental-features = ["nix-command" "flakes"];
-    # ...
+  nix.settings.experimental-features = [
+    "nix-command"
+    "flakes"
+  ];
+  # ...
 
   # Limit the number of generations to keep
   # boot.loader.systemd-boot.configurationLimit = 10;
 
-#   system.autoUpgrade ={
-#     enable = true
-#     channel = "https://nixos.org/channels/nixos-25.11"
-#   };
+  #   system.autoUpgrade ={
+  #     enable = true
+  #     channel = "https://nixos.org/channels/nixos-25.11"
+  #   };
 
   # Perform garbage collection weekly to maintain low disk usage
   nix.gc = {
@@ -293,7 +310,7 @@ in
   nix.settings.auto-optimise-store = true;
 
   nix = {
-  #package = pkg.nixFllakes;
-  extraOptions = "experimental-features = nix-command flakes";
+    #package = pkg.nixFllakes;
+    extraOptions = "experimental-features = nix-command flakes";
   };
 }
