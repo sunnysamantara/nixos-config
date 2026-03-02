@@ -32,7 +32,10 @@ Resources:
     
     
     
-    
+    plasma-mager 
+    superfile
+    zsh
+    fonts konsole
     
     
     Commands

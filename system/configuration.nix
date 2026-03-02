@@ -1,21 +1,19 @@
 #coiguration file to define what should be installed on
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
-
-{ config, pkgs, ... }:
-let
-  user = "sunny";
-in
 {
+  config,
+  pkgs,
+  ...
+}: let
+  user = "sunny";
+in {
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
-    ./app/nvf_neovim.nix
   ];
 
   #Nvidia
-
-
 
   # Enable OpenGL
   hardware.graphics = {
@@ -30,12 +28,29 @@ in
     "nvidia"
     "modesetting"
   ];
- 
-services ={
-fstrim.enable = true;
-};
-  hardware.nvidia = {
 
+  services = {
+    fstrim.enable = true;
+  };
+  programs.git = {
+    enable = true;
+    lfs.enable = true;
+
+    # settings = {
+    #   user = {
+    #     name = "Sunny";
+    #     email = "sunny.samantara1@gmail.com";
+    #   };
+    # };
+    #   extraConfig = {
+    #     init.defaultBranch = "main";
+    #   };
+  };
+#   environment.shells = with pkgs; [zsh];
+  environment.pathsToLink = ["/share/zsh"];
+#   users.defaultUserShell = pkgs.zsh;
+#   programs.zsh.enable = true;
+  hardware.nvidia = {
     # Modesetting is required.
     modesetting.enable = true;
 
@@ -194,6 +209,8 @@ fstrim.enable = true;
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.sunny = {
+  shell = pkgs.zsh;
+  ignoreShellProgramCheck = true;
     isNormalUser = true;
     description = "sunny";
     extraGroups = [
@@ -218,7 +235,7 @@ fstrim.enable = true;
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-    vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
+    # vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
     wget
     lshw
     libheif
@@ -246,14 +263,18 @@ fstrim.enable = true;
     resvg
     qpwgraph
     wayland-utils
-    wl-clipboard
+    btop
+    gdu
+    # wl-clipboard
     #neovim
-    git
+    # git
   ];
+
 
   programs.neovim = {
     enable = true;
   };
+  programs.bat.enable = true;
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   # programs.mtr.enable = true;
@@ -299,7 +320,7 @@ fstrim.enable = true;
   nix.gc = {
     automatic = true;
     dates = "weekly";
-    options = "--delete-older-than 7d";
+    options = "--delete-older-than 15d";
   };
 
   # Optimize storage
@@ -312,5 +333,9 @@ fstrim.enable = true;
   nix = {
     #package = pkg.nixFllakes;
     extraOptions = "experimental-features = nix-command flakes";
+  };
+  system.autoUpgrade = {
+    enable = true;
+    dates = "weekly";
   };
 }
