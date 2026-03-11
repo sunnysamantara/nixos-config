@@ -1,36 +1,36 @@
-{
+ {
   config,
   pkgs,
+  lib,
   ...
 }: {
   imports = [
-    ./nvf_neovim.nix
-    ./zsh.nix
+    ./neovim.nix
+    ./plasma_manager.nix
+    ./shell.nix
   ];
-  # Home Manager needs a bit of information about you and the
-  # paths it should manage.
-  # home.username = "sunny";
-  # home.homeDirectory = "/home/sunny";
-# home.shell.enableZshIntegration = true;
-
+  # zsh changes has been moved to shell.nix
   home.packages = with pkgs; [
     fastfetch
     superfile
+    nerd-fonts.roboto-mono
+    kdePackages.kate
+    kdePackages.kcalc
+    kdePackages.partitionmanager
+    kdePackages.sddm-kcm
+    kdePackages.wayland-protocols
+    kdePackages.kde-gtk-config
+    kdePackages.dolphin-plugins
+    kdePackages.kdesdk-thumbnailers
+    kdePackages.kdegraphics-thumbnailers
+    kdePackages.kdenetwork-filesharing
+    kdePackages.kdeconnect-kde
+    kdePackages.kamoso
+    kdePackages.kimageformats
+    kdePackages.qtimageformats
+    kdePackages.ffmpegthumbs
   ];
-
-  # This value determines the Home Manager release that your
-  # configuration is compatible with. This helps avoid breakage
-  # when a new Home Manager release introduces backwards
-  # incompatible changes.
-  #
-  # You can update Home Manager without changing this value. See
-  # the Home Manager release notes for a list of state version
-  # changes in each release.
-  home.stateVersion = "25.11";
-
-  # Let Home Manager install and manage itself.
-  programs.home-manager.enable = true;
-
+  
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
   # plain files is through 'home.file'.
   home.file = {
@@ -63,7 +63,18 @@
   #  /etc/profiles/per-user/sunny/etc/profile.d/hm-session-vars.sh
   #
   home.sessionVariables = {
-    # EDITOR = "emacs";
+    EDITOR = "nvim";
   };
+  # Let Home Manager install and manage itself.
+  programs.home-manager.enable = true;
 
-}
+  # This value determines the Home Manager release that your
+  # configuration is compatible with. This helps avoid breakage
+  # when a new Home Manager release introduces backwards
+  # incompatible changes.
+  #
+  # You can update Home Manager without changing this value. See
+  # the Home Manager release notes for a list of state version
+  # changes in each release.
+  home.stateVersion = "25.11";
+}           

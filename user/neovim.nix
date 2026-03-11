@@ -37,6 +37,7 @@
               "black"
             ];
             nix = ["nixfmt"];
+            json = ["deno_fmt"];
           };
         };
         git.enable = true;
@@ -71,6 +72,7 @@
             format.enable = true;
           };
         };
+        lineNumberMode = "relNumber";
         lsp = {
           enable = true;
           lspconfig.enable = true;
@@ -84,7 +86,7 @@
           enable = true;
           languages = ["en"];
         };
-        startPlugins = [pkgs.vimPlugins.render-markdown-nvim];
+        # startPlugins = [pkgs.vimPlugins.render-markdown-nvim];
         statusline.lualine.enable = true;
         syntaxHighlighting = true;
         theme = {
@@ -94,8 +96,21 @@
           transparent = true;
         };
         ui.colorizer.enable = true;
+        undoFile.enable = true;
+        undoFile.path = "/home/sunny/.config/nvim/undo";
         viAlias = true;
         vimAlias = true;
+        extraPlugins = {
+          render-markdown = {
+            package = pkgs.vimPlugins.render-markdown-nvim;
+            after = ["nvim-treesitter"]; # ensure load order
+            setup = ''
+              require('render-markdown').setup({
+                render_modes = { 'n', 'c', 't' },
+              })
+            '';
+          };
+        };
       };
     };
   };

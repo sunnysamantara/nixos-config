@@ -4,7 +4,7 @@
   ...
 }: {
   programs.zsh = {
-  enable = true;
+    enable = true;
     history = {
       append = true;
       findNoDups = true;
@@ -30,5 +30,8 @@
     };
     historySubstringSearch.enable = true;
     # zprof.enable = true; #benchmark shell
+    shellAliases = {
+      ls = "ls --color";
+    };
   };
 }

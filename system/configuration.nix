@@ -1,6 +1,3 @@
-#coiguration file to define what should be installed on
-# your system.  Help is available in the configuration.nix(5) man page
-# and in the NixOS manual (accessible by running ‘nixos-help’).
 {
   config,
   pkgs,
@@ -12,7 +9,6 @@ in {
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
   ];
-
   #Nvidia
 
   # Enable OpenGL
@@ -35,21 +31,15 @@ in {
   programs.git = {
     enable = true;
     lfs.enable = true;
-
-    # settings = {
-    #   user = {
-    #     name = "Sunny";
-    #     email = "sunny.samantara1@gmail.com";
-    #   };
-    # };
-    #   extraConfig = {
-    #     init.defaultBranch = "main";
-    #   };
   };
-#   environment.shells = with pkgs; [zsh];
-  environment.pathsToLink = ["/share/zsh"];
-#   users.defaultUserShell = pkgs.zsh;
-#   programs.zsh.enable = true;
+  # environment.shells = [pkgs.nushell];
+  #   environment.shells = with pkgs; [zsh];
+  # environment.pathsToLink = ["/share/zsh"];
+  #   users.defaultUserShell = pkgs.zsh;
+  #   programs.zsh.enable = true;
+  # environment.shells = with pkgs; [zsh];
+  #   users.defaultUserShell = pkgs.zsh;
+  #   programs.zsh.enable = true;
   hardware.nvidia = {
     # Modesetting is required.
     modesetting.enable = true;
@@ -209,8 +199,9 @@ in {
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.sunny = {
-  shell = pkgs.zsh;
-  ignoreShellProgramCheck = true;
+    # shell = pkgs.zsh;
+    # shell = pkgs.nushell;
+    # ignoreShellProgramCheck = true;
     isNormalUser = true;
     description = "sunny";
     extraGroups = [
@@ -268,8 +259,8 @@ in {
     # wl-clipboard
     #neovim
     # git
+    # nushell
   ];
-
 
   programs.neovim = {
     enable = true;
@@ -294,6 +285,34 @@ in {
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
 
+  nix = {
+    extraOptions = "experimental-features = nix-command flakes";
+    settings.experimental-features = [
+      "nix-command"
+      "flakes"
+    ];
+
+    # Refer to the following link for more details:
+    # https://nixos.org/manual/nix/stable/command-ref/conf-file.html#conf-auto-optimise-store
+    settings.auto-optimise-store = true; # nix-store --optimise
+    gc = {
+      automatic = true;
+      dates = "weekly";
+      options = "--delete-older-than 15d";
+    };
+  };
+  system.autoUpgrade = {
+    enable = true;
+    dates = "weekly";
+  };
+
+  programs.nh = {
+    enable = true;
+    clean.enable = true;
+    clean.extraArgs = "--keep-since 15d --keep 5";
+    flake = "/home/sunny/.dotfile"; # sets NH_OS_FLAKE variable for you
+  };
+
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
   # on your system were taken. It‘s perfectly fine and recommended to leave
@@ -301,41 +320,4 @@ in {
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "25.11"; # Did you read the comment?
-
-  nix.settings.experimental-features = [
-    "nix-command"
-    "flakes"
-  ];
-  # ...
-
-  # Limit the number of generations to keep
-  # boot.loader.systemd-boot.configurationLimit = 10;
-
-  #   system.autoUpgrade ={
-  #     enable = true
-  #     channel = "https://nixos.org/channels/nixos-25.11"
-  #   };
-
-  # Perform garbage collection weekly to maintain low disk usage
-  nix.gc = {
-    automatic = true;
-    dates = "weekly";
-    options = "--delete-older-than 15d";
-  };
-
-  # Optimize storage
-  # You can also manually optimize the store via:
-  #    nix-store --optimise
-  # Refer to the following link for more details:
-  # https://nixos.org/manual/nix/stable/command-ref/conf-file.html#conf-auto-optimise-store
-  nix.settings.auto-optimise-store = true;
-
-  nix = {
-    #package = pkg.nixFllakes;
-    extraOptions = "experimental-features = nix-command flakes";
-  };
-  system.autoUpgrade = {
-    enable = true;
-    dates = "weekly";
-  };
 }
