@@ -2,19 +2,28 @@
   imports = [
     # ./zsh.nix
   ];
-  home.shell.enableNushellIntegration = true;
+  home = {
+    shell.enableNushellIntegration = true;
+    sessionVariables = {
+      SHELL = "${pkgs.nushell}/bin/nu";
+    };
+  };
   programs.nushell = {
     enable = true;
     settings = {
       show_banner = "short";
     };
   };
-
+  # programs.tmux = {
+  #   enable = true;
+  #   # shell = "${pkgs.nushell}/bin/nu";
+  #   keyMode = "vi";
+  # };
   programs.konsole = {
     enable = true;
     defaultProfile = "sunny";
-
     profiles.sunny = {
+      # command = "${pkgs.tmux}/bin/tmux";
       command = "${pkgs.nushell}/bin/nu";
       font = {
         name = "RobotoMono Nerd Font";
@@ -26,6 +35,7 @@
   programs.oh-my-posh = {
     enable = true;
     enableNushellIntegration = true;
-    useTheme = "tokyo";
+    # useTheme = "easy-term";
+    configFile = "/home/sunny/.dotfile/user/catppuccin_custom.json";
   };
 }
