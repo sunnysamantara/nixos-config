@@ -1,4 +1,4 @@
- {
+{
   config,
   pkgs,
   lib,
@@ -29,8 +29,16 @@
     kdePackages.kimageformats
     kdePackages.qtimageformats
     kdePackages.ffmpegthumbs
+    git-filter-repo
   ];
-  
+
+  nixpkgs = {
+    config = {
+      allowUnfree = true;
+      allowUnfreePredicate = _: true;
+    };
+  };
+  programs.obsidian.enable = true;
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
   # plain files is through 'home.file'.
   home.file = {
@@ -77,4 +85,4 @@
   # the Home Manager release notes for a list of state version
   # changes in each release.
   home.stateVersion = "25.11";
-}           
+}

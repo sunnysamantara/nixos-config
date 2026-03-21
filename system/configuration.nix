@@ -77,7 +77,14 @@ in {
   };
 
   networking.firewall.enable = true;
-
+  networking.firewall.allowedTCPPorts = [22];
+  services.openssh = {
+    enable = true;
+    settings = {
+      PasswordAuthentication = false; # disable password login (recommended)
+      PermitRootLogin = "no"; # disable root login
+    };
+  };
   #bluetooth
   hardware.bluetooth = {
     enable = true;
@@ -121,7 +128,7 @@ in {
   };
 
   # Use latest kernel.
-  boot.kernelPackages = pkgs.linuxPackages_xanmod_stable;
+  boot.kernelPackages = pkgs.linuxPackages;
   boot.kernelParams = [
     "nvidia.Nvreg_PreserveVideoMemoryAllocations=1"
     "nvidia-drm.modeset=1"
@@ -202,6 +209,9 @@ in {
     # shell = pkgs.zsh;
     # shell = pkgs.nushell;
     # ignoreShellProgramCheck = true;
+    # openssh.authorizedKeys.keyFiles = [
+    #   /home/sunny/.ssh/github
+    # ];
     isNormalUser = true;
     description = "sunny";
     extraGroups = [
