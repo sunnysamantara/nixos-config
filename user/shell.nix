@@ -1,6 +1,7 @@
 {pkgs, ...}: {
   imports = [
     # ./zsh.nix
+    ./oh-my-posh.nix
   ];
   home = {
     shell.enableNushellIntegration = true;
@@ -12,6 +13,9 @@
     enable = true;
     settings = {
       show_banner = "short";
+    };
+    shellAliases = {
+      btop = "btop --force-utf";
     };
   };
   # programs.tmux = {
@@ -36,6 +40,6 @@
     enable = true;
     enableNushellIntegration = true;
     # useTheme = "easy-term";
-    configFile = "/home/sunny/.dotfile/user/catppuccin_custom.json";
+    # configFile = "/home/sunny/.dotfile/user/catppuccin_custom.json";
   };
 }

@@ -8,12 +8,18 @@
     ./neovim.nix
     ./plasma_manager.nix
     ./shell.nix
+    ./fastfetch.nix
+    # ./yubikey.nix
   ];
   # zsh changes has been moved to shell.nix
   home.packages = with pkgs; [
-    fastfetch
     superfile
+    noto-fonts
+    noto-fonts-cjk-sans
+    noto-fonts-color-emoji
     nerd-fonts.roboto-mono
+    nerd-fonts.fira-mono
+    nerd-fonts.fira-code
     kdePackages.kate
     kdePackages.kcalc
     kdePackages.partitionmanager
@@ -30,6 +36,20 @@
     kdePackages.qtimageformats
     kdePackages.ffmpegthumbs
     git-filter-repo
+    brave
+    catppuccin-kde
+    catppuccin-cursors.mochaDark
+    kdePackages.qtstyleplugin-kvantum
+    (catppuccin-kvantum.override {
+      accent = "sapphire";
+      variant = "mocha";
+    })
+    (catppuccin-gtk.override {
+      accents = ["sapphire"];
+      variant = "mocha";
+    })
+    papirus-icon-theme
+
   ];
 
   nixpkgs = {
@@ -53,6 +73,8 @@
     #   org.gradle.daemon.idletimeout=3600000
     # '';
   };
+
+  # HM will rename conflicting files to <name>.backup instead of erroring
 
   # Home Manager can also manage your environment variables through
   # 'home.sessionVariables'. These will be explicitly sourced when using a

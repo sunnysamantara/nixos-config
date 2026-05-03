@@ -1,6 +1,7 @@
 {
   config,
   pkgs,
+  inputs,
   ...
 }: let
   user = "sunny";
@@ -8,6 +9,8 @@ in {
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
+    ./grub.nix
+    ./yubikey.nix
   ];
   #Nvidia
 
@@ -108,25 +111,6 @@ in {
     };
   };
 
-  # Bootloader.
-  boot.loader = {
-    efi = {
-      canTouchEfiVariables = true;
-      efiSysMountPoint = "/boot"; # ← use the same mount point here.
-    };
-    grub = {
-      enable = true;
-      efiSupport = true;
-      useOSProber = true;
-      #efiInstallAsRemovable = true; # in case canTouchEfiVariables doesn't work for your system
-      device = "nodev";
-      configurationLimit = 10;
-    };
-    timeout = 5;
-    # Disable systemd-boot
-    systemd-boot.enable = false;
-  };
-
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages;
   boot.kernelParams = [
@@ -171,10 +155,15 @@ in {
   services.xserver.enable = false;
 
   # Enable the KDE Plasma Desktop Environment.
-  services.displayManager.sddm.enable = true;
+  services.displayManager.sddm = {
+    enable = true;
+    autoNumlock = true;
+    wayland.enable = true;
+    settings.General.DisplayServer = "wayland";
+    enableHidpi = true;
+    settings.General.InputMethod = "maliit";
+  };
   services.desktopManager.plasma6.enable = true;
-  services.displayManager.sddm.wayland.enable = true;
-  services.displayManager.sddm.settings.General.DisplayServer = "wayland";
 
   # Configure keymap in X11
   services.xserver.xkb = {
@@ -220,7 +209,6 @@ in {
     ];
     packages = with pkgs; [
       bitwarden-desktop
-      libreoffice-qt-fresh
       kdePackages.kdenlive
       obs-studio
       veracrypt
@@ -256,6 +244,7 @@ in {
     kdePackages.qtimageformats
     kdePackages.ffmpegthumbs
     kdePackages.kate
+    libreoffice-qt-fresh
     qtscrcpy
     gimp2-with-plugins
     kdePackages.ktorrent
@@ -270,8 +259,12 @@ in {
     #neovim
     # git
     # nushell
+    maliit-framework
+    maliit-keyboard
   ];
-
+  environment.plasma6.excludePackages = with pkgs; [
+    kdePackages.discover
+  ];
   programs.neovim = {
     enable = true;
   };
@@ -294,7 +287,12 @@ in {
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
-
+  services.solaar = {
+    enable = true;
+    package = pkgs.solaar;
+    window = "hide"; # Show the window on startup (show, *hide*, only [window only])
+    batteryIcons = "regular"; # Which battery icons to use (*regular*, symbolic, solaar)
+  };
   nix = {
     extraOptions = "experimental-features = nix-command flakes";
     settings.experimental-features = [
@@ -305,11 +303,11 @@ in {
     # Refer to the following link for more details:
     # https://nixos.org/manual/nix/stable/command-ref/conf-file.html#conf-auto-optimise-store
     settings.auto-optimise-store = true; # nix-store --optimise
-    gc = {
-      automatic = true;
-      dates = "weekly";
-      options = "--delete-older-than 15d";
-    };
+    # gc = {
+    #   automatic = true;
+    #   dates = "weekly";
+    #   options = "--delete-older-than 15d";
+    # };
   };
   system.autoUpgrade = {
     enable = true;
@@ -321,6 +319,11 @@ in {
     clean.enable = true;
     clean.extraArgs = "--keep-since 15d --keep 5";
     flake = "/home/sunny/.dotfile"; # sets NH_OS_FLAKE variable for you
+  };
+
+  environment.sessionVariables = {
+    QT_IM_MODULE        = "maliit";
+    MALIIT_PLUGINS_DIRS = "${pkgs.maliit-keyboard}/lib/maliit/plugins";
   };
 
   # This value determines the NixOS release from which the default

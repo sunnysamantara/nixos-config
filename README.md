@@ -30,7 +30,11 @@ Resources:
     https://nixos-and-flakes.thiscute.world
     
     
-    
+   Meta + G
+MEta+W
+meta+ctrl+esc
+meta+esc
+
     
     plasma-mager 
     superfile

@@ -17,6 +17,14 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.home-manager.follows = "home-manager";
     };
+    solaar = {
+      url = "https://flakehub.com/f/Svenum/Solaar-Flake/*.tar.gz";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    lobo-grub-theme = {
+      url = "github:rats-scamper/LoboGrubTheme";
+      flake = false; # plain source repo, no flake.nix
+    };
   };
 
   outputs = {
@@ -36,6 +44,7 @@
           inherit inputs;
         };
         modules = [
+          inputs.solaar.nixosModules.default
           ./system/configuration.nix
         ];
       };
@@ -50,6 +59,10 @@
           home = {
             inherit username;
             homeDirectory = "/home/${username}";
+          };
+          home-manager = {
+            backupFileExtension = "backup";
+            overwriteBackup = true;
           };
         }
       ];
