@@ -7,6 +7,16 @@ https://www.youtube.com/@librephoenix
 
 https://www.youtube.com/watch?v=AGVXJ-TIv3Y
 
+ssh key generation 
+ssh-keygen -t ed25519 -C "sunny.samantara1@gmail.com" -f ~/.ssh/github
+ssh-add ~/.ssh/github
+eval "$(ssh-agent -s)"
+ssh -T git@github.com
+git remote -v
+
+git remote set-url origin git@github.com:sunnysamantara/nixos-config.git
+
+
 
 Resources:
   NixOS:
