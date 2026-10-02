@@ -1,23 +1,25 @@
 {pkgs, ...}: {
   imports = [
-    # ./zsh.nix
+    ./zsh.nix
     ./oh-my-posh.nix
   ];
   home = {
-    shell.enableNushellIntegration = true;
+    # shell.enableNushellIntegration = true;
+    shell.enableZshIntegration = true;
     sessionVariables = {
-      SHELL = "${pkgs.nushell}/bin/nu";
+      # SHELL = "${pkgs.nushell}/bin/nu";
+      SHELL = "${pkgs.zsh}/bin/zsh";
     };
   };
-  programs.nushell = {
-    enable = true;
-    settings = {
-      show_banner = "short";
-    };
-    shellAliases = {
-      btop = "btop --force-utf";
-    };
-  };
+  # programs.nushell = {
+  #   enable = true;
+  #   settings = {
+  #     show_banner = "short";
+  #   };
+  #   shellAliases = {
+  #     btop = "btop --force-utf";
+  #   };
+  # };
   # programs.tmux = {
   #   enable = true;
   #   # shell = "${pkgs.nushell}/bin/nu";
@@ -28,18 +30,19 @@
     defaultProfile = "sunny";
     profiles.sunny = {
       # command = "${pkgs.tmux}/bin/tmux";
-      command = "${pkgs.nushell}/bin/nu";
+      command = "${pkgs.zsh}/bin/zsh";
       font = {
         name = "RobotoMono Nerd Font";
         size = 12;
       };
+      # colorScheme = "Catppuccin-Mocha";
     };
   };
 
-  programs.oh-my-posh = {
-    enable = true;
-    enableNushellIntegration = true;
-    # useTheme = "easy-term";
-    # configFile = "/home/sunny/.dotfile/user/catppuccin_custom.json";
-  };
+  # programs.oh-my-posh = {
+  #   enable = true;
+  #   enableNushellIntegration = true;
+  #   useTheme = "easy-term";
+  #   configFile = "/home/sunny/.dotfile/user/catppuccin_custom.json";
+  # };
 }

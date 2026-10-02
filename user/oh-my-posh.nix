@@ -1,6 +1,8 @@
-{ config, pkgs, ... }:
-
 {
+  config,
+  pkgs,
+  ...
+}: {
   programs.oh-my-posh = {
     enable = true;
     useTheme = null; # using custom settings below
@@ -33,7 +35,7 @@
               type = "session";
               style = "plain";
               foreground = "p:blue";
-              template = "[{{ .UserName }}@{{ .HostName }}] ";
+              template = "[{{ if .SSHSession }}\ueba9 {{ end }}{{ .UserName }}@{{ .HostName }}] ";
             }
             {
               type = "path";
@@ -50,16 +52,16 @@
               type = "git";
               style = "plain";
               foreground = "p:lavender";
-              background_templates = [
+              foreground_templates = [
                 "{{ if or (.Working.Changed) (.Staging.Changed) }}#FFEB3B{{ end }}"
                 "{{ if and (gt .Ahead 0) (gt .Behind 0) }}#FFCC80{{ end }}"
                 "{{ if gt .Ahead 0 }}#B388FF{{ end }}"
                 "{{ if gt .Behind 0 }}#B388FB{{ end }}"
               ];
-              template = "[{{ .UpstreamIcon }}{{ .HEAD }}{{if .BranchStatus }} {{ .BranchStatus }}{{ end }}{{ if .Working.Changed }}  {{ .Working.String }}{{ end }}{{ if and (.Working.Changed) (.Staging.Changed) }} |{{ end }}{{ if .Staging.Changed }}  {{ .Staging.String }}{{ end }}{{ if gt .StashCount 0 }}  {{ .StashCount }}{{ end }}] ";
+              template = "[{{ .UpstreamIcon }}{{ .HEAD }}{{if .BranchStatus }} {{ .BranchStatus }}{{ end }}{{ if .Working.Changed }} {{ .Working.String }}{{ end }}{{ if and (.Working.Changed) (.Staging.Changed) }} |{{ end }}{{ if .Staging.Changed }} {{ .Staging.String }}{{ end }}{{ if gt .StashCount 0 }} {{ .StashCount }}{{ end }}] ";
               options = {
                 fetch_status = true;
-                fetch_upstream_icon = true;
+                # fetch_upstream_icon = true;
               };
             }
           ];
@@ -72,12 +74,22 @@
           segments = [
             {
               type = "executiontime";
-              style = "diamond";
+              style = "plain";
               foreground = "p:pink";
               template = "[{{ .FormattedMs }}] ";
               options = {
-                style = "plain";
+                style = "roundrock";
                 threshold = 0;
+                always_enabled = true;
+              };
+            }
+            {
+              type = "time";
+              style = "plain";
+              foreground = "p:lavender";
+              template = "[{{ .CurrentDate | date .Format }}] ";
+              options = {
+                time_format = "Mon, 3:04PM";
               };
             }
           ];

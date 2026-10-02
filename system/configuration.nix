@@ -3,20 +3,24 @@
   pkgs,
   inputs,
   ...
-}: let
+}:
+let
   user = "sunny";
-in {
+in
+{
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
-    ./grub.nix
+    ./login.nix
     ./yubikey.nix
+    ./virt.nix
   ];
   #Nvidia
 
   # Enable OpenGL
   hardware.graphics = {
     enable = true;
+    enable32Bit = true;
   };
 
   # Load nvidia driver for Xorg and Wayland
@@ -34,7 +38,31 @@ in {
   programs.git = {
     enable = true;
     lfs.enable = true;
+    config = {
+      user = {
+        name = "sunnysamantara";
+        email = "sunny.samantara1@gmail.com";
+      };
+      init = {
+        defaultBranch = "main";
+      };
+    };
   };
+
+  programs.nix-ld.enable = true;
+  programs.nix-ld.libraries = with pkgs; [
+    libxcb
+    xcb-util-cursor
+    libx11
+    libxi
+    libsm
+    libice
+    libxkbcommon
+    fontconfig
+    freetype
+    dbus
+    glib
+  ];
   # environment.shells = [pkgs.nushell];
   #   environment.shells = with pkgs; [zsh];
   # environment.pathsToLink = ["/share/zsh"];
@@ -51,7 +79,7 @@ in {
     # Enable this if you have graphical corruption issues or application crashes after waking
     # up from sleep. This fixes it by saving the entire VRAM memory to /tmp/ instead
     # of just the bare essentials.
-    powerManagement.enable = true;
+    powerManagement.enable = false;
 
     # Fine-grained power management. Turns off GPU when not in use.
     # Experimental and only works on modern Nvidia GPUs (Turing or newer).
@@ -79,8 +107,37 @@ in {
     package = config.boot.kernelPackages.nvidiaPackages.stable;
   };
 
-  networking.firewall.enable = true;
-  networking.firewall.allowedTCPPorts = [22];
+  # 1. Firewall Configuration for Packet / Quick Share
+  networking.firewall = {
+    enable = true;
+
+    # Port 9300 is the standard static port for Packet / Quick Share receiving
+    allowedTCPPorts = [
+      9300
+      22
+    ];
+
+    allowedTCPPortRanges = [
+      {
+        from = 1714;
+        to = 1764;
+      }
+    ];
+    allowedUDPPortRanges = [
+      {
+        from = 1714;
+        to = 1764;
+      }
+    ];
+
+    # mDNS (Multicast DNS) uses UDP port 5353 for device discovery
+    allowedUDPPorts = [ 5353 ];
+  };
+
+  # programs.openlogi = {
+  #   enable = true;
+  #   launchAtLogin = true;
+  # };
   services.openssh = {
     enable = true;
     settings = {
@@ -88,6 +145,7 @@ in {
       PermitRootLogin = "no"; # disable root login
     };
   };
+  programs.fuse.userAllowOther = true;
   #bluetooth
   hardware.bluetooth = {
     enable = true;
@@ -155,14 +213,7 @@ in {
   services.xserver.enable = false;
 
   # Enable the KDE Plasma Desktop Environment.
-  services.displayManager.sddm = {
-    enable = true;
-    autoNumlock = true;
-    wayland.enable = true;
-    settings.General.DisplayServer = "wayland";
-    enableHidpi = true;
-    settings.General.InputMethod = "maliit";
-  };
+
   services.desktopManager.plasma6.enable = true;
 
   # Configure keymap in X11
@@ -195,9 +246,9 @@ in {
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.sunny = {
-    # shell = pkgs.zsh;
+    shell = pkgs.zsh;
     # shell = pkgs.nushell;
-    # ignoreShellProgramCheck = true;
+    ignoreShellProgramCheck = true;
     # openssh.authorizedKeys.keyFiles = [
     #   /home/sunny/.ssh/github
     # ];
@@ -208,11 +259,22 @@ in {
       "wheel"
     ];
     packages = with pkgs; [
-      bitwarden-desktop
+      # bitwarden-desktop
       kdePackages.kdenlive
       obs-studio
       veracrypt
     ];
+  };
+
+  # 2. Enable Avahi (mDNS) daemon so your Android device and PC can see each other
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true; # Allows resolving local .local hostnames over IPv4
+    publish = {
+      enable = true;
+      addresses = true;
+      userServices = true;
+    };
   };
 
   # Install firefox.
@@ -220,7 +282,9 @@ in {
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
-
+  programs.partition-manager.enable = true;
+  #   programs.kdeconnect.enable = true;
+  security.polkit.enable = true;
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
@@ -230,7 +294,8 @@ in {
     libheif
     kdePackages.kate
     kdePackages.kcalc
-    kdePackages.partitionmanager
+    # kdePackages.partitionmanager
+    kdePackages.kdeconnect-kde
     kdePackages.sddm-kcm
     kdePackages.wayland-protocols
     kdePackages.kde-gtk-config
@@ -238,33 +303,45 @@ in {
     kdePackages.kdesdk-thumbnailers
     kdePackages.kdegraphics-thumbnailers
     kdePackages.kdenetwork-filesharing
-    kdePackages.kdeconnect-kde
     kdePackages.kamoso
     kdePackages.kimageformats
     kdePackages.qtimageformats
     kdePackages.ffmpegthumbs
     kdePackages.kate
+    kdePackages.plasma-browser-integration
     libreoffice-qt-fresh
     qtscrcpy
     gimp2-with-plugins
     kdePackages.ktorrent
     nufraw-thumbnailer
+    testdisk-qt
+    kdePackages.qtmultimedia
+    kdePackages.qtsvg
+    kdePackages.layer-shell-qt
     haruna
     resvg
-    qpwgraph
+    # qpwgraph
     wayland-utils
     btop
     gdu
+    devenv
+    kdePackages.plasma-keyboard
     # wl-clipboard
     #neovim
     # git
     # nushell
-    maliit-framework
-    maliit-keyboard
+    # maliit-framework
+    # maliit-keyboard
+    catppuccin-sddm-corners
   ];
   environment.plasma6.excludePackages = with pkgs; [
     kdePackages.discover
   ];
+
+  programs.direnv = {
+    enable = true;
+    nix-direnv.enable = true;
+  };
   programs.neovim = {
     enable = true;
   };
@@ -289,9 +366,9 @@ in {
   # networking.firewall.enable = false;
   services.solaar = {
     enable = true;
-    package = pkgs.solaar;
+    # package = pkgs.solaar;
     window = "hide"; # Show the window on startup (show, *hide*, only [window only])
-    batteryIcons = "regular"; # Which battery icons to use (*regular*, symbolic, solaar)
+    # batteryIcons = "symbolic"; # Which battery icons to use (*regular*, symbolic, solaar)
   };
   nix = {
     extraOptions = "experimental-features = nix-command flakes";
@@ -313,6 +390,10 @@ in {
     enable = true;
     dates = "weekly";
   };
+  nix.settings.trusted-users = [
+    "root"
+    "sunny"
+  ];
 
   programs.nh = {
     enable = true;
@@ -321,10 +402,16 @@ in {
     flake = "/home/sunny/.dotfile"; # sets NH_OS_FLAKE variable for you
   };
 
-  environment.sessionVariables = {
-    QT_IM_MODULE        = "maliit";
-    MALIIT_PLUGINS_DIRS = "${pkgs.maliit-keyboard}/lib/maliit/plugins";
-  };
+  # environment.sessionVariables = {
+  # QT_IM_MODULE = "maliit";
+  # MALIIT_PLUGINS_DIRS = "${pkgs.maliit-keyboard}/lib/maliit/plugins";
+  # };
+
+  # Forces the on-screen keyboard to appear even without a touchscreen
+  # (default behavior is touch-only)
+  # environment.sessionVariables = {
+  #   KWIN_IM_SHOW_ALWAYS = "1";
+  # };
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions

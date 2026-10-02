@@ -61,4 +61,44 @@ meta+esc
     nix --extra-experimental-features nix-command --extra-experimental-features flakes flake show
     
     nixos-rebuild
+    
+    
+    1- install nixOs 
+    
+    2- enable falkes
+    nix.settings.experimental-features = [ "nix-command" "flakes" ];
+    3- change hostname
+    
+    4- rebuild system 
+    sudo nixos-rebuild switch
+    
+    5 - rebuild with install bootloaler and change the hardwareconfig file
+    nix flake update
+    sudo nixos-rebuild switch --install-bootloader --flake .
+    sudo rm -rf /boot/EFI/systemd
+    sudo rm -rf /boot/EFI/BOOT/BOOTX64.EFI
 
+    
+    6 - rebuild home manger 
+    nix run github:nix-community/home-manager -- switch --flake .
+    
+    nix flake update
+    export NIXPKGS_ALLOW_INSECURE=1
+
+sudo nixos-rebuild switch --flake .
+NIXPKGS_ALLOW_INSECURE=1 sudo -E nixos-rebuild switch --flake . --impure
+
+sudo nix-collect-garbage -d
+sudo nix-store --optimise
+
+nix-shell -p ntfs3g --run "sudo ntfsfix --clear-dirty /dev/nvme0n1p5"
+
+sudo nix-store --verify --check-contents --repair
+
+env -u QT_QPA_PLATFORM_PLUGIN_PATH -u QT_PLUGIN_PATH spyder
+
+C00l&unny
+
+SS@547505
+
+Qwertghjkl12#$%

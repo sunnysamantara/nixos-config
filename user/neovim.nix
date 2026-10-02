@@ -87,14 +87,20 @@
           languages = ["en"];
         };
         # startPlugins = [pkgs.vimPlugins.render-markdown-nvim];
-        statusline.lualine.enable = true;
+        statusline.lualine = {
+          enable = true;
+          theme = "auto";
+        };
         syntaxHighlighting = true;
-        theme = {
+        /*
+          theme = {
           enable = true;
           name = "gruvbox";
           style = "dark";
           transparent = true;
         };
+        */
+        #Theme has been moved to catppuccin
         ui.colorizer.enable = true;
         undoFile.enable = true;
         undoFile.path = "/home/sunny/.config/nvim/undo";

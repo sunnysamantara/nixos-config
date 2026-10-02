@@ -16,18 +16,37 @@
   programs.plasma = {
     enable = true;
     overrideConfig = true;
+    krunner = {
+      shortcuts.launch = "Meta";
+      position = "center";
+      activateWhenTypingOnDesktop = true;
+      historyBehavior = "enableAutoComplete";
+    };
+    kscreenlocker = {
+      # appearance.wallpaperPictureOfTheDay = {
+      #   provider = "natgeo";
+      #   updateOverMeteredConnection = false;
+      # };
+      appearance.wallpaperSlideShow = {
+        path = "${pkgs.kdePackages.plasma-workspace-wallpapers}/share/wallpapers/";
+      };
+      autoLock = true;
+      timeout = 10;
+    };
     workspace = {
       # Global Theme (look-and-feel package identifier)
-      # lookAndFeel = "org.kde.breezedark.desktop";
+      lookAndFeel = "Catppuccin-Mocha-Teal";
       # Plasma shell chrome (breeze-dark, etc.)
-      theme = "breeze-dark";
-
+      widgetStyle = "catppuccin-mocha-teal-standard";
+      # theme = "Catppuccin-Frappe-Blue";
+      enableMiddleClickPaste = true;
       # Color scheme applied to all Qt/KDE windows
-      colorScheme = "CatppuccinFrappeBlue";
+      colorScheme = "CatppuccinMochaTeal";
 
       # Cursor — correct submodule path (cursorTheme was renamed and removed)
       cursor = {
-        theme = "catppuccin-mocha-dark-cursors";
+        theme = "graphite-dark";
+        #this has been moved to theme.nix
         animationTime = 5;
         cursorFeedback = "Bouncing";
         size = 23;
@@ -36,15 +55,26 @@
 
       # Icon theme
       iconTheme = "Papirus-Dark";
-
+      wallpaperSlideShow = {
+        path = "${pkgs.kdePackages.plasma-workspace-wallpapers}/share/wallpapers/";
+        interval = 300;
+      };
       # Solid colour fallback wallpaper — correct option name
-      wallpaperPlainColor = "30,30,46"; # #1e1e2e Mocha Base in R,G,B
+      # wallpaperPlainColor = "30,30,46"; # #1e1e2e Mocha Base in R,G,B
     };
-    workspace.windowDecorations = {
-      theme = "Breeze";
-      library = "org.kde.breeze";
-    };
-    configFile."kdeglobals"."KDE"."widgetStyle" = "breeze";
+    # workspace.windowDecorations = {
+    #   theme = "Breeze";
+    #   library = "org.kde.breeze";
+    # };
+    # workspace.windowDecorations = {
+    #   library = "Catppuccin-Frappe-Modern";
+    #   theme = "Catppuccin-Frappe-Modern";
+    #   /*
+    #   buttonSize = "Tiny";
+    #   */
+    # };
+    # configFile.kwinrc."org.kde.kdecoration2".BorderSize = "Tiny";
+    # configFile."kdeglobals"."KDE"."widgetStyle" = "breeze";
 
     #
     # # Tell Kvantum which theme to use
@@ -76,13 +106,84 @@
         blur = {
           enable = true;
           noiseStrength = 0;
-          strength = 6;
+          strength = 8;
         };
+        desktopSwitching = {
+          animation = "fade";
+          navigationWrapping = true;
+        };
+        # dimInactive.enable = true;
+        dimAdminMode.enable = true;
+        # hideCursor = {
+        #   enable = true;
+        #   hideOnInactivity = 30;
+        #   hideOnTyping = true;
+        # };
+        shakeCursor.enable = true;
         slideBack.enable = true;
         translucency.enable = true;
         wobblyWindows.enable = true;
       };
+      titlebarButtons.left = [
+        "keep-above-windows"
+        "keep-below-windows"
+      ];
+      titlebarButtons.right = [
+        "help"
+        "minimize"
+        "maximize"
+        "close"
+      ];
     };
+    powerdevil = {
+      AC = {
+        autoSuspend = {
+          action = "hibernate";
+          idleTimeout = 1800;
+        };
+        dimDisplay = {
+          enable = true;
+          idleTimeout = 1680;
+        };
+        powerButtonAction = "turnOffScreen";
+        turnOffDisplay.idleTimeoutWhenLocked = 60;
+        powerProfile = "balanced";
+      };
+      battery = {
+        autoSuspend = {
+          action = "hibernate";
+          idleTimeout = 900;
+        };
+        dimDisplay = {
+          enable = true;
+          idleTimeout = 780;
+        };
+        powerButtonAction = "shutDown";
+        turnOffDisplay.idleTimeoutWhenLocked = 30;
+        powerProfile = "powerSaving";
+        whenLaptopLidClosed = "hibernate";
+      };
+      batteryLevels.lowLevel = 20;
+      lowBattery = {
+        autoSuspend = {
+          action = "hibernate";
+          idleTimeout = 300;
+        };
+        dimDisplay = {
+          enable = true;
+          idleTimeout = 180;
+        };
+        powerButtonAction = "shutDown";
+        powerProfile = "powerSaving";
+        turnOffDisplay.idleTimeout = 180;
+        whenLaptopLidClosed = "shutDown";
+      };
+    };
+    session = {
+      general.askForConfirmationOnLogout = true;
+      sessionRestore.restoreOpenApplicationsOnLogin = "onLastLogout";
+    };
+    desktop.mouseActions.verticalScroll = "switchVirtualDesktop";
     fonts = {
       fixedWidth = {
         family = "RobotoMono Nerd Font";
