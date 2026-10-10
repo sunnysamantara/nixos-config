@@ -12,7 +12,6 @@
     nixd # Nix Language Server
     nixfmt-rfc-style # Nix formatter
   ];
-
   # Configure Zed settings directly via Home Manager
   programs.zed-editor = {
     enable = true;

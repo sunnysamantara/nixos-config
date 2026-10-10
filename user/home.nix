@@ -15,6 +15,7 @@
     ./desktop.nix
     ./zed.nix
     ./obsidian.nix
+    ./opencode.nix
     # ./yubikey.nix
   ];
   # zsh changes has been moved to shell.nix
@@ -42,6 +43,7 @@
       kdePackages.kimageformats
       kdePackages.qtimageformats
       kdePackages.ffmpegthumbs
+      kdePackages.plasma-integration
       git-filter-repo
       # solaar
       brave

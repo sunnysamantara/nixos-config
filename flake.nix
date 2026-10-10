@@ -2,10 +2,12 @@
   description = "survival suite";
 
   inputs = {
-    # NixOS official package source, here using the nixos-25.11 branch
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-26.05";
+    flake-parts.url = "github:hercules-ci/flake-parts";
+    import-tree.url = "github:vic/import-tree";
     home-manager = {
-      url = "github:nix-community/home-manager/release-26.05";
+      url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nvf = {
@@ -34,10 +36,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     qylock.url = "github:Darkkal44/qylock";
-    # zen-browser = {
-    #   url = "github:youwen5/zen-browser-flake";
-    #   inputs.nixpkgs.follows = "nixpkgs";
-    # };
     catppuccin = {
       url = "github:catppuccin/nix/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -50,71 +48,14 @@
       url = "github:karaolidis/nix-obsidian-extensions";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # devenv = {
-    #   url = "github:cachix/devenv";
-    #   inputs.nixpkgs.follows = "nixpkgs";
-    # };
   };
 
-  outputs =
-    {
-      self,
-      nixpkgs,
-      home-manager,
-      ...
-    }@inputs:
-    let
-      username = "sunny";
-      system = "x86_64-linux";
-      pkgs = nixpkgs.legacyPackages.${system};
-    in
-    {
-      nixosConfigurations = {
-        acer-aspire = nixpkgs.lib.nixosSystem {
-          inherit system;
-          specialArgs = {
-            inherit inputs;
-          };
-          modules = [
-            inputs.dedsec-grub-theme.nixosModule
-            inputs.qylock.nixosModules.default
-            inputs.catppuccin.nixosModules.catppuccin
-            inputs.solaar.nixosModules.default
-            inputs.openlogi.nixosModules.default
-            ./system/configuration.nix
-          ];
-        };
-      };
-      homeConfigurations.${username} = home-manager.lib.homeManagerConfiguration {
-        pkgs = import nixpkgs {
-          inherit system;
-          config.allowUnfree = true; # needed for obsidian itself
-          overlays = [ inputs.obsidian-extensions.overlays.default ];
-        };
-        extraSpecialArgs = { inherit inputs; };
-        modules = [
-          inputs.catppuccin.homeModules.catppuccin
-          inputs.plasma-manager.homeModules.plasma-manager
-          inputs.nvf.homeManagerModules.default
-          ./user/home.nix
-          {
-            home = {
-              inherit username;
-              homeDirectory = "/home/${username}";
-            };
-          }
-        ];
-      };
-      # devShells.${system} = {
-      #   default = inputs.devenv.lib.mkShell {
-      #     inherit pkgs inputs;
-      #     modules = [
-      #       # Base configuration stub to resolve missing internal attribute bugs
-      #       ({config, ...}: {
-      #         cachix.enable = false;
-      #       })
-      #     ];
-      #   };
-      # };
-    };
+  outputs = inputs:
+    inputs.flake-parts.lib.mkFlake { inherit inputs; }
+      (inputs.import-tree [
+        ./core
+        ./features
+        ./users
+        ./hosts
+      ]);
 }
