@@ -1,104 +1,91 @@
 # nixos-config
 
+NixOS configuration managed as a flake (flake-parts + import-tree). Branch
+`nix-dendrite` re-architects the old `system/`+`user/` layout into
+`core/ features/ users/ hosts/`.
 
-https://www.youtube.com/@matthiasbenaets
+- `core/` – host registry wiring (`hosts.nix`), flake module registration.
+- `features/` – reusable NixOS (`nixos/`) and home-manager (`homeManager/`) modules.
+- `users/` – per-user config (accounts + home-manager feature opt-in).
+- `hosts/` – per-machine config (`acer-aspire`, `skullsaint`).
+- Two package sets in every module: `pkgs` (nixos-unstable) and
+  `stable-pkgs` (nixos-26.05).
+- New `.nix` files must be `git add`-ed before the flake can see them, and
+  `nix flake check` is the verification step (no test suite).
 
-https://www.youtube.com/@librephoenix
+## First-time setup
 
-https://www.youtube.com/watch?v=AGVXJ-TIv3Y
-
-ssh key generation 
-ssh-keygen -t ed25519 -C "sunny.samantara1@gmail.com" -f ~/.ssh/github
+```sh
+ssh-keygen -t ed25519 -C "github" -f ~/.ssh/github
 ssh-add ~/.ssh/github
-eval "$(ssh-agent -s)"
-ssh -T git@github.com
-git remote -v
-
 git remote set-url origin git@github.com:sunnysamantara/nixos-config.git
+ssh -T git@github.com
+```
 
+## Everyday commands (host: `acer-aspire`)
 
+| Task                                   | Command                                                        |
+| -------------------------------------- | -------------------------------------------------------------- |
+| Check the whole flake evaluates        | `nix flake check`                                              |
+| Apply a config change (system + home-manager) | `sudo nixos-rebuild switch --flake .#acer-aspire`        |
+| Build without applying                 | `nixos-rebuild build --flake .#acer-aspire`                    |
+| Reinstall bootloader on first install  | `sudo nixos-rebuild switch --install-bootloader --flake .#acer-aspire` |
+| Update all inputs, then apply          | `nix flake update` then `sudo nixos-rebuild switch --flake .#acer-aspire` |
+| Update only some inputs                | `nix flake update home-manager nixpkgs nixpkgs-stable`          |
+| Inspect host config                     | `nix eval --json .#nixosConfigurations.acer-aspire.config.system.path` |
 
-Resources:
-  NixOS:
-    1. NixOS Website: https://nixos.org/
-    2. NixOS Manual: https://nixos.org/manual/nixos/stable/
-    3. NixOS Packages & Options: https://search.nixos.org/packages
-    4. NixOS Wiki: https://nixos.wiki/wiki/Main_Page
-  Home-Manager:
-    5. Home-Manager: https://github.com/nix-community/home...
-    6. Home-Manager Manual: https://nix-community.github.io/home-...
-    7. Home-Manager Appendix A: https://nix-community.github.io/home-...
-    8. Home-Manager Appendix B: https://nix-community.github.io/home-...
-  Examples:
-    9. Personal Flake: https://github.com/MatthiasBenaets/ni... 
-    10. List of reference configurations: https://nixos.wiki/wiki/Configuration...
-  Extras:
-    11. NixOS Learn: https://nixos.org/learn.html/
-    12. Nix Pills: https://nixos.org/guides/nix-pills/
+> On the machine itself, `.#<host>` resolves from the repo dir; use the host
+> attribute name (`skullsaint` for `hosts/skullsaints`).
 
-    
-    https://nixos-and-flakes.thiscute.world
-    
-    
-   Meta + G
-MEta+W
-meta+ctrl+esc
-meta+esc
+## Upgrading home-manager programs & settings
 
-    
-    plasma-mager 
-    superfile
-    zsh
-    fonts konsole
-    
-    
-    Commands
-    
-    nix flake check
-    
-    nix-channel --list
-    
-    nix --extra-experimental-features nix-command --extra-experimental-features flakes flake show
-    
-    nixos-rebuild
-    
-    
-    1- install nixOs 
-    
-    2- enable falkes
-    nix.settings.experimental-features = [ "nix-command" "flakes" ];
-    3- change hostname
-    
-    4- rebuild system 
-    sudo nixos-rebuild switch
-    
-    5 - rebuild with install bootloaler and change the hardwareconfig file
-    nix flake update
-    sudo nixos-rebuild switch --install-bootloader --flake .
-    sudo rm -rf /boot/EFI/systemd
-    sudo rm -rf /boot/EFI/BOOT/BOOTX64.EFI
+home-manager runs *as a NixOS module* here — there is no separate
+`home-manager switch`. Editing `features/homeManager/*.nix` or `users/*/` and
+then rebuilding the host rebuilds and activates every user's home config.
 
-    
-    6 - rebuild home manger 
-    nix run github:nix-community/home-manager -- switch --flake .
-    
-    nix flake update
-    export NIXPKGS_ALLOW_INSECURE=1
+```sh
+nix flake update                 # bump home-manager, nixpkgs, nixpkgs-stable, nvf…
+sudo nixos-rebuild switch --flake .#acer-aspire
+```
 
-sudo nixos-rebuild switch --flake .
+If a package is marked insecure:
+
+```sh
 NIXPKGS_ALLOW_INSECURE=1 sudo -E nixos-rebuild switch --flake . --impure
+```
 
-sudo nix-collect-garbage -d
-sudo nix-store --optimise
+## Useful `nh` commands
 
-nix-shell -p ntfs3g --run "sudo ntfsfix --clear-dirty /dev/nvme0n1p5"
+`nh` (nix-community/nh) replaces `nixos-rebuild`/`nix flake update` with a
+single wrapper. Install it via `pkgs.nh` (or `feature nixos`), then:
 
+| Task                                       | Command                                            |
+| ------------------------------------------ | -------------------------------------------------- |
+| Build + apply config (system + home-manager) | `nh os switch . -H acer-aspire`                  |
+| Build without applying                     | `nh os build . -H acer-aspire`                     |
+| Update inputs + verify it builds           | `nh update`                                        |
+| Update + apply in one go                   | `nh update --switch` (if supported)                |
+| Old-generation / store GC                  | `sudo nh clean all --keep-since 15d --keep 5`      |
+| Same, keeping direnv roots                 | `sudo nh clean --no-direnv`                        |
+
+`nh` can auto-resolve the flake/host if `programs.nh.flake = "/home/sunny/homeserver"`
+is set on the machine — then just `nh os switch`.
+
+## Other useful nix commands
+
+```sh
+sudo nix-collect-garbage -d                 # delete old generations + GC
+sudo nix-store --optimise                   # hard-link dedup in the store
 sudo nix-store --verify --check-contents --repair
+nix flake show                               # list all flake outputs
+nix-channel --list                           # (legacy channels; this repo is flake-only)
+```
 
-env -u QT_QPA_PLATFORM_PLUGIN_PATH -u QT_PLUGIN_PATH spyder
+## Resources
 
-C00l&unny
-
-SS@547505
-
-Qwertghjkl12#$%
+- awesome-nix (curated Nix resources): https://github.com/nix-community/awesome-nix
+- nix.dev (official tutorials): https://nix.dev
+- Packages / options search: https://search.nixos.org
+- NixOS Wiki: https://wiki.nixos.org
+- home-manager options reference: https://nix-community.github.io/home-manager/options.xhtml
+- NixOS & Flakes Book (practical guide): https://nixos-and-flakes.thiscute.world

@@ -40,7 +40,7 @@ let
   };
 
   # NixOS features included on every host, in addition to each host's own list.
-  baseFeatures = [ "boot" ];
+  baseFeatures = [ "boot" "core" "internationalization" ];
 
   # Look up a registered module, failing with a readable message.
   getMod =
@@ -50,8 +50,18 @@ let
 
   mkHost =
     host:
+    let
+      # Stable nixpkgs (nixos-26.05) for `stable-pkgs.X` in any NixOS or
+      # home-manager module; `pkgs.X` remains nixos-unstable.
+      stable-pkgs = import inputs.nixpkgs-stable {
+        inherit (host) system;
+        config.allowUnfree = true;
+      };
+    in
     inputs.nixpkgs.lib.nixosSystem {
-      specialArgs = { inherit inputs; };
+      specialArgs = {
+        inherit inputs stable-pkgs;
+      };
       modules = [
         inputs.home-manager.nixosModules.home-manager
         {
@@ -61,7 +71,9 @@ let
           home-manager = {
             useGlobalPkgs = true;
             useUserPackages = true;
-            extraSpecialArgs = { inherit inputs; };
+            extraSpecialArgs = {
+              inherit inputs stable-pkgs;
+            };
             users = lib.genAttrs host.users (getMod "homeManager");
           };
         }

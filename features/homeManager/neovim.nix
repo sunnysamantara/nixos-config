@@ -1,0 +1,124 @@
+{ inputs, ... }:
+{
+  flake.modules.homeManager.neovim = { config, pkgs, ... }: {
+    imports = [ inputs.nvf.homeManagerModules.default ];
+
+    programs.neovim = {
+      enable = true;
+    };
+
+    programs.nvf = {
+      enable = true;
+      settings = {
+        vim = {
+          autopairs.nvim-autopairs.enable = true;
+          autocomplete.blink-cmp = {
+            enable = true;
+            friendly-snippets.enable = true;
+            sourcePlugins.spell.enable = true;
+          };
+          # binds.hardtime-nvim.enable = true ;
+          binds.whichKey = {
+            enable = true;
+            setupOpts = {
+              notify = true;
+              preset = "modern"; # classic, modern, helix
+              win.border = "rounded";
+            };
+          };
+          clipboard = {
+            enable = true;
+            providers.wl-copy.enable = true;
+            registers = "unnamed,unnamedplus";
+          };
+          comments.comment-nvim.enable = true;
+          formatter.conform-nvim = {
+            enable = true;
+            setupOpts.formatters_by_ft = {
+              lua = [ "stylua" ];
+              python = [
+                "isort"
+                "black"
+              ];
+              nix = [ "nixfmt" ];
+              json = [ "deno_fmt" ];
+            };
+          };
+          git.enable = true;
+          keymaps = [
+            {
+              desc = "Format file";
+              key = "ff";
+              mode = [
+                "n"
+                "v"
+              ];
+              lua = true;
+              action = "function() require('conform').format() end";
+            }
+          ];
+          languages = {
+            enableFormat = true;
+            enableTreesitter = true;
+            nix.enable = true;
+            python.enable = true;
+            html.enable = true;
+            java.enable = true;
+            json.enable = true;
+            lua.enable = true;
+            markdown = {
+              enable = true;
+              treesitter.enable = true;
+              lsp.enable = true;
+            };
+            css = {
+              enable = true;
+              format.enable = true;
+            };
+          };
+          lineNumberMode = "relNumber";
+          lsp = {
+            enable = true;
+            lspconfig.enable = true;
+          };
+          options = {
+            tabstop = 2;
+            shiftwidth = 2;
+          };
+          searchCase = "smart";
+          spellcheck = {
+            enable = true;
+            languages = [ "en" ];
+          };
+          # startPlugins = [pkgs.vimPlugins.render-markdown-nvim];
+          statusline.lualine = {
+            enable = true;
+            setupOpts.options.theme = "auto";
+          };
+          syntaxHighlighting = true;
+          theme = {
+            enable = true;
+            name = "catppuccin";
+            style = "mocha";
+          };
+          ui.colorizer.enable = true;
+          undoFile.enable = true;
+          undoFile.path = "${config.home.homeDirectory}/.config/nvim/undo";
+          viAlias = true;
+          vimAlias = true;
+          extraPlugins = {
+            render-markdown = {
+              package = pkgs.vimPlugins.render-markdown-nvim;
+              after = [ "nvim-treesitter" ]; # ensure load order
+              setup = ''
+                require('render-markdown').setup({
+                  render_modes = { 'n', 'c', 't' },
+                })
+              '';
+            };
+          };
+        };
+      };
+    };
+  };
+}

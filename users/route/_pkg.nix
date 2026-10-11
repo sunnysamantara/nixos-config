@@ -1,8 +1,7 @@
-{ pkgs, ... }:
+{ pkgs, stable-pkgs, ... }:
 {
 
-  home.packages = with pkgs; [
-    # htop
-    # ripgrep
+  home.packages = [
+    stable-pkgs.wget # stable (nixos-26.05)
   ];
 }

@@ -6,6 +6,7 @@
     nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-26.05";
     flake-parts.url = "github:hercules-ci/flake-parts";
     import-tree.url = "github:vic/import-tree";
+    qylock.url = "github:Darkkal44/qylock";
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -19,23 +20,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.home-manager.follows = "home-manager";
     };
-    solaar = {
-      url = "https://flakehub.com/f/Svenum/Solaar-Flake/*.tar.gz";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     openlogi = {
       url = "github:AprilNEA/OpenLogi";
-      # inputs.nixpkgs.follows = "nixpkgs";
-    };
-    lobo-grub-theme = {
-      url = "github:rats-scamper/LoboGrubTheme";
-      flake = false; # plain source repo, no flake.nix
-    };
-    dedsec-grub-theme = {
-      url = "gitlab:VandalByte/dedsec-grub-theme";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    qylock.url = "github:Darkkal44/qylock";
     catppuccin = {
       url = "github:catppuccin/nix/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";

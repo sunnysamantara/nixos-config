@@ -17,9 +17,10 @@
     };
   };
 
-  flake.modules.homeManager.route = { ... }: {
+flake.modules.homeManager.route = { ... }: {
     imports = with config.flake.modules.homeManager; [
-      
+      ./_pkg.nix # skipped by import-tree (leading underscore), so imported here
+      zsh
     ];
 
     # home.username / home.homeDirectory are derived from users.users.route.

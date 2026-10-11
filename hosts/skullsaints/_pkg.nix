@@ -1,8 +1,7 @@
-{ pkgs, ... }:
+{ pkgs, stable-pkgs, ... }:
 {
 
-  environment.systemPackages = with pkgs; [
-    # htop
-    # ripgrep
+  environment.systemPackages = [
+    stable-pkgs.lshw # stable (nixos-26.05)
   ];
 }

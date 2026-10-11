@@ -1,8 +1,7 @@
 { pkgs, ... }:
 {
 
-  environment.systemPackages = with pkgs; [
-    # htop
-    # ripgrep
+  environment.systemPackages = [
+    pkgs.lshw # unstable (nixos-unstable)
   ];
 }

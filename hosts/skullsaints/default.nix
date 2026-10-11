@@ -11,18 +11,14 @@
     ];
 
     # NixOS-side features, matching flake.modules.nixos.<name> in features/
-    features = [ ];
+    features = [ "openssh" ];
 
     extra = [
       ./_hardware.nix # nixos-generate-config --show-hardware-config > _hardware.nix
       ./_pkg.nix
       {
-
-        # sunny is a Nix trusted user on this host only.
-        nix.settings.trusted-users = [
-          "root"
-          "sunny"
-        ];
+        # core is a base feature; sunny owns the .dotfile flake on this host.
+        core.dotfileUser = "sunny";
         system.stateVersion = "25.11";
       }
     ];

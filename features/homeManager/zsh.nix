@@ -1,6 +1,14 @@
 { ... }:
 {
   flake.modules.homeManager.zsh = { config, pkgs, ... }: {
+
+    home = {
+      shell.enableZshIntegration = true;
+      sessionVariables = {
+        SHELL = "${pkgs.zsh}/bin/zsh";
+      };
+    };
+
     programs.zsh = {
       enable = true;
       history = {

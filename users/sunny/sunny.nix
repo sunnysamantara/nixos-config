@@ -9,6 +9,8 @@
       extraGroups = [
         "wheel"
         "networkmanager"
+        "libvirtd" # needed for virt-manager/libvirt access
+        "kvm" # needed for virt-manager/KVM device access
       ];
       # Keep your existing password setup here (hashedPassword / hashedPasswordFile).
       hashedPassword = "$6$12wVJVGjT1QWyeXO$b4UONtpR0jEmqBhrqNJJx644GNfBqPXGzqZbMZtAjaUULYxdTzA63vWF9UgNncrloDcunTZ.rGhKESv6pu9un0";
@@ -21,6 +23,16 @@
       ./_pkg.nix # skipped by import-tree (leading underscore), so imported here
       zsh
       fastfetch
+      neovim
+      oh-my-posh
+      zed
+      kde-all
+      openssh
+      git
+      lazygit
+      catppuccin
+      obsidian
+      opencode
     ];
 
     # home.username / home.homeDirectory are derived from users.users.sunny.

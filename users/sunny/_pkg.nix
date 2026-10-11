@@ -1,8 +1,7 @@
 { pkgs, ... }:
 {
 
-  home.packages = with pkgs; [
-    # htop
-    # ripgrep
+  home.packages = [
+    pkgs.lshw # unstable (nixos-unstable)
   ];
 }

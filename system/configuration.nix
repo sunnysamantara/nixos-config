@@ -15,39 +15,11 @@ in
     ./yubikey.nix
     ./virt.nix
   ];
-  #Nvidia
-
-  # Enable OpenGL
-  hardware.graphics = {
-    enable = true;
-    enable32Bit = true;
-  };
-
-  # Load nvidia driver for Xorg and Wayland
-  # For offloading, `modesetting` is needed additionally,
-  # otherwise the X-server will be running permanently on nvidia,
-  # thus keeping the GPU always on (see `nvidia-smi`).
-  services.xserver.videoDrivers = [
-    "nvidia"
-    "modesetting"
-  ];
 
   services = {
     fstrim.enable = true;
   };
-  programs.git = {
-    enable = true;
-    lfs.enable = true;
-    config = {
-      user = {
-        name = "sunnysamantara";
-        email = "sunny.samantara1@gmail.com";
-      };
-      init = {
-        defaultBranch = "main";
-      };
-    };
-  };
+
 
   programs.nix-ld.enable = true;
   programs.nix-ld.libraries = with pkgs; [
@@ -63,49 +35,6 @@ in
     dbus
     glib
   ];
-  # environment.shells = [pkgs.nushell];
-  #   environment.shells = with pkgs; [zsh];
-  # environment.pathsToLink = ["/share/zsh"];
-  #   users.defaultUserShell = pkgs.zsh;
-  #   programs.zsh.enable = true;
-  # environment.shells = with pkgs; [zsh];
-  #   users.defaultUserShell = pkgs.zsh;
-  #   programs.zsh.enable = true;
-  hardware.nvidia = {
-    # Modesetting is required.
-    modesetting.enable = true;
-
-    # Nvidia power management. Experimental, and can cause sleep/suspend to fail.
-    # Enable this if you have graphical corruption issues or application crashes after waking
-    # up from sleep. This fixes it by saving the entire VRAM memory to /tmp/ instead
-    # of just the bare essentials.
-    powerManagement.enable = false;
-
-    # Fine-grained power management. Turns off GPU when not in use.
-    # Experimental and only works on modern Nvidia GPUs (Turing or newer).
-    powerManagement.finegrained = false;
-    prime = {
-      sync.enable = true;
-      # Make sure to use the correct Bus ID values for your system!
-      intelBusId = "PCI:0:2:0";
-      nvidiaBusId = "PCI:1:0:0";
-    };
-
-    # Use the NVidia open source kernel module (not to be confused with the
-    # independent third-party "nouveau" open source driver).
-    # Support is limited to the Turing and later architectures. Full list of
-    # supported GPUs is at:
-    # https://github.com/NVIDIA/open-gpu-kernel-modules#compatible-gpus
-    # Only available from driver 515.43.04+
-    open = false;
-
-    # Enable the Nvidia settings menu,
-    # accessible via `nvidia-settings`.
-    nvidiaSettings = true;
-
-    # Optionally, you may need to select the appropriate driver version for your specific GPU.
-    package = config.boot.kernelPackages.nvidiaPackages.stable;
-  };
 
   # 1. Firewall Configuration for Packet / Quick Share
   networking.firewall = {
@@ -114,7 +43,7 @@ in
     # Port 9300 is the standard static port for Packet / Quick Share receiving
     allowedTCPPorts = [
       9300
-      22
+
     ];
 
     allowedTCPPortRanges = [
@@ -133,54 +62,10 @@ in
     # mDNS (Multicast DNS) uses UDP port 5353 for device discovery
     allowedUDPPorts = [ 5353 ];
   };
-
-  # programs.openlogi = {
-  #   enable = true;
-  #   launchAtLogin = true;
-  # };
-  services.openssh = {
-    enable = true;
-    settings = {
-      PasswordAuthentication = false; # disable password login (recommended)
-      PermitRootLogin = "no"; # disable root login
-    };
-  };
   programs.fuse.userAllowOther = true;
   #bluetooth
-  hardware.bluetooth = {
-    enable = true;
-    powerOnBoot = true;
-    settings = {
-      General = {
-        # Shows battery charge of connected devices on supported
-        # Bluetooth adapters. Defaults to 'false'.
-        Experimental = true;
-        # When enabled other devices can connect faster to us, however
-        # the tradeoff is increased power consumption. Defaults to
-        # 'false'.
-        FastConnectable = true;
-      };
-      Policy = {
-        # Enable all controllers when they are found. This includes
-        # adapters present on start as well as adapters that are plugged
-        # in later on. Defaults to 'true'.
-        AutoEnable = true;
-      };
-    };
-  };
 
-  # Use latest kernel.
-  boot.kernelPackages = pkgs.linuxPackages;
-  boot.kernelParams = [
-    "nvidia.Nvreg_PreserveVideoMemoryAllocations=1"
-    "nvidia-drm.modeset=1"
-  ];
-  networking.hostName = "acer-aspire"; # Define your hostname.
-  #networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
   # Enable networking
   networking.networkmanager.enable = true;
@@ -226,23 +111,8 @@ in
   services.printing.enable = true;
 
   # Enable sound with pipewire.
-  services.pulseaudio.enable = false;
-  security.rtkit.enable = true;
-  services.pipewire = {
-    enable = true;
-    alsa.enable = true;
-    alsa.support32Bit = true;
-    pulse.enable = true;
-    # If you want to use JACK applications, uncomment this
-    jack.enable = true;
 
-    # use the example session manager (no others are packaged yet so this is enabled by default,
-    # no need to redefine it in your config for now)
-    #media-session.enable = true;
-  };
 
-  # Enable touchpad support (enabled default in most desktopManager).
-  # services.xserver.libinput.enable = true;
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.sunny = {
@@ -266,16 +136,7 @@ in
     ];
   };
 
-  # 2. Enable Avahi (mDNS) daemon so your Android device and PC can see each other
-  services.avahi = {
-    enable = true;
-    nssmdns4 = true; # Allows resolving local .local hostnames over IPv4
-    publish = {
-      enable = true;
-      addresses = true;
-      userServices = true;
-    };
-  };
+
 
   # Install firefox.
   programs.firefox.enable = true;
@@ -334,17 +195,13 @@ in
     # maliit-keyboard
     catppuccin-sddm-corners
   ];
-  environment.plasma6.excludePackages = with pkgs; [
-    kdePackages.discover
-  ];
+
 
   programs.direnv = {
     enable = true;
     nix-direnv.enable = true;
   };
-  programs.neovim = {
-    enable = true;
-  };
+
   programs.bat.enable = true;
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
@@ -370,37 +227,12 @@ in
     window = "hide"; # Show the window on startup (show, *hide*, only [window only])
     # batteryIcons = "symbolic"; # Which battery icons to use (*regular*, symbolic, solaar)
   };
-  nix = {
-    extraOptions = "experimental-features = nix-command flakes";
-    settings.experimental-features = [
-      "nix-command"
-      "flakes"
-    ];
-
-    # Refer to the following link for more details:
-    # https://nixos.org/manual/nix/stable/command-ref/conf-file.html#conf-auto-optimise-store
-    settings.auto-optimise-store = true; # nix-store --optimise
-    # gc = {
-    #   automatic = true;
-    #   dates = "weekly";
-    #   options = "--delete-older-than 15d";
-    # };
   };
   system.autoUpgrade = {
     enable = true;
     dates = "weekly";
   };
-  nix.settings.trusted-users = [
-    "root"
-    "sunny"
-  ];
 
-  programs.nh = {
-    enable = true;
-    clean.enable = true;
-    clean.extraArgs = "--keep-since 15d --keep 5";
-    flake = "/home/sunny/.dotfile"; # sets NH_OS_FLAKE variable for you
-  };
 
   # environment.sessionVariables = {
   # QT_IM_MODULE = "maliit";
