@@ -2,6 +2,10 @@
 {
 
   environment.systemPackages = [
-    pkgs.lshw # unstable (nixos-unstable)
+    pkgs.bitwarden-desktop # unstable (nixos-unstable)
+    pkgs.superfile
+    pkgs.brave
   ];
+
+  programs.bat.enable = true;
 }

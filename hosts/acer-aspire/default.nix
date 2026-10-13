@@ -8,17 +8,21 @@
 
     # NixOS-side features, matching flake.modules.nixos.<name> in features/
     features = [
-      "virt-manager"
-      "nvidia"
-      "sddm"
       "sddm-sword"
       "kde"
       "kdeconnect"
-      "openssh"
       "catppuccin"
+      "openlogi"
+    ];
+
+    # System services, matching flake.services.<name> in services/
+    services = [
       "audio"
       "bluetooth"
-      "openlogi"
+      "nvidia"
+      "sddm"
+      "virt-manager"
+      "openssh"
     ];
 
     extra = [

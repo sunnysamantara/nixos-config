@@ -39,9 +39,7 @@
       shellAliases = {
         ls = "ls --color";
       };
-      initContent = ''
-        eval "$(devenv hook zsh)"
-      '';
+
     };
   };
 }

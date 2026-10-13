@@ -1,6 +1,6 @@
 { ... }:
 {
-  flake.modules.nixos.virt-manager = { pkgs, ... }: {
+  flake.services.virt-manager = { pkgs, ... }: {
     environment.systemPackages = with pkgs; [
       virt-manager
       virt-viewer

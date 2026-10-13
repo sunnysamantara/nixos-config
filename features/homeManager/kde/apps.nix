@@ -1,11 +1,12 @@
 { ... }:
 {
   flake.modules.homeManager.kde-apps = { pkgs, ... }: {
+
     home.packages = with pkgs.kdePackages; [
       kate
       kcalc
-      partitionmanager
       sddm-kcm
+      partitionmanager
       wayland-protocols
       kde-gtk-config
       dolphin-plugins
@@ -13,6 +14,7 @@
       kdegraphics-thumbnailers
       kdenetwork-filesharing
       kdeconnect-kde
+      kdenlive
       kamoso
       kimageformats
       qtimageformats
@@ -22,8 +24,9 @@
       plasma-keyboard
       layer-shell-qt
       qtmultimedia
-      qtsvg
       ktorrent
+      qtsvg
+      pkgs.haruna
     ];
   };
 }

@@ -29,11 +29,14 @@
       kde-all
       openssh
       git
-      lazygit
       catppuccin
       obsidian
       opencode
+      profile-picture
+      devenv
     ];
+
+    profile.picture = ./resources/icon.png;
 
     # home.username / home.homeDirectory are derived from users.users.sunny.
     # Keep the value from your current home-manager config.

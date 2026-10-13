@@ -11,7 +11,10 @@
     ];
 
     # NixOS-side features, matching flake.modules.nixos.<name> in features/
-    features = [ "openssh" ];
+    features = [ ];
+
+    # System services, matching flake.services.<name> in services/
+    services = [ "openssh" ];
 
     extra = [
       ./_hardware.nix # nixos-generate-config --show-hardware-config > _hardware.nix

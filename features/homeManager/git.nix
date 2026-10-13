@@ -19,5 +19,10 @@
         init.defaultBranch = "main";
       };
     };
+
+    programs.lazygit = {
+      enable = true;
+      enableZshIntegration = true;
+    };
   };
 }

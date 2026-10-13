@@ -5,6 +5,8 @@
 
     programs.neovim = {
       enable = true;
+      withPython3 = true;
+      withRuby = false;
     };
 
     programs.nvf = {

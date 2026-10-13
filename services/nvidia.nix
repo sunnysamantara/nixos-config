@@ -1,6 +1,6 @@
 { ... }:
 {
-  flake.modules.nixos.nvidia = { config, pkgs, ... }: {
+  flake.services.nvidia = { config, pkgs, ... }: {
     # Use latest kernel (nvidia driver package is tied to it).
     boot.kernelPackages = pkgs.linuxPackages;
 

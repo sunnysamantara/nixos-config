@@ -1,6 +1,8 @@
 { ... }:
 {
-  flake.modules.nixos.kdeconnect = { ... }: {
+  flake.modules.nixos.kdeconnect = { pkgs, ... }: {
+    environment.systemPackages = [ pkgs.kdePackages.kdeconnect-kde ];
+
     # System services kdeconnect-kde (home-manager kde-apps) needs.
     services.avahi = {
       enable = true; # service discovery

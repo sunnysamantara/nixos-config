@@ -7,7 +7,7 @@
       marksman # Markdown Language Server
       harper # Grammar and spell checker LSP
       nixd # Nix Language Server
-      nixfmt-rfc-style # Nix formatter
+      nixfmt # Nix formatter
     ];
     # Configure Zed settings directly via Home Manager
     programs.zed-editor = {

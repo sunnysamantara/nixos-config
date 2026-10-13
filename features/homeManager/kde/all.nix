@@ -14,6 +14,7 @@
       kde-fonts
       kde-apps
       kde-konsole
+      nixdatifier
     ];
   };
 }

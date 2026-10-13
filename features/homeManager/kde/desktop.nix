@@ -3,6 +3,10 @@
   flake.modules.homeManager.kde-desktop = { pkgs, ... }: {
     home.packages = [ pkgs.appmenu-glib-translator ];
 
+    home.sessionVariables = {
+      GTK_MODULES = "appmenu-gtk-module";
+    };
+
     programs.plasma.panels = [
       {
         location = "bottom";

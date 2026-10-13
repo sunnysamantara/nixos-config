@@ -1,6 +1,6 @@
 { ... }:
 {
-  flake.modules.nixos.boot = { pkgs, ... }: {
+  flake.services.boot = { pkgs, ... }: {
     boot.loader = {
       efi = {
         #canTouchEfiVariables = true;

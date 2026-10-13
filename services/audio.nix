@@ -1,6 +1,6 @@
 { ... }:
 {
-  flake.modules.nixos.audio = { pkgs, ... }: {
+  flake.services.audio = { pkgs, ... }: {
     environment.systemPackages = [ pkgs.qpwgraph ];
 
     services.pulseaudio.enable = false;
