@@ -4,6 +4,7 @@
   inputs = {
     # NixOS official package source, here using the nixos-25.11 branch
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+    nixdatifier.url = "github:Muddyblack/nixdatifier";
     home-manager = {
       url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -96,6 +97,7 @@
           inputs.catppuccin.homeModules.catppuccin
           inputs.plasma-manager.homeModules.plasma-manager
           inputs.nvf.homeManagerModules.default
+          inputs.nixdatifier.homeManagerModules.default
           ./user/home.nix
           {
             home = {

@@ -11,8 +11,8 @@
     harper # Grammar and spell checker LSP
     nixd # Nix Language Server
     nixfmt-rfc-style # Nix formatter
+    vscode-langservers-extracted # HTML/CSS/JSON path completion
   ];
-
   # Configure Zed settings directly via Home Manager
   programs.zed-editor = {
     enable = true;
@@ -20,11 +20,16 @@
     extensions = [
       "markdown"
       "harper"
+      "pathy"
       "nix"
     ];
+
     userSettings = {
       format_on_save = "on";
       formatter = "auto";
+      edit_predictions = {
+        provider = "zed"; # "zed", "copilot", or "none"
+      };
       # window_decorations = "server";
       autosave = {
         after_delay = {
@@ -58,9 +63,17 @@
       restore_on_startup = "last_session";
       session.restore_unsaved_buffers = true;
       preview_tabs.enabled = true;
+      file_finder = {
+        hidden = true;
+        show_ignored = false;
+      };
+      create_file = {
+        show_relative_path = true;
+      };
       # Enable LSPs for Markdown files
       languages = {
         Markdown = {
+          enable_language_server = true;
           language_servers = [
             "marksman"
             "harper"
@@ -72,6 +85,7 @@
 
         # Nix language configuration
         Nix = {
+          enable_language_server = true;
           language_servers = [
             "nixd"
             "!nil"
@@ -117,7 +131,7 @@
               };
               options = {
                 nixos.expr = "(builtins.getFlake \"/home/sunny/.dotfile\").nixosConfigurations.acer-aspire.options";
-                home_manager.expr = "(builtins.getFlake \"/home/sunny/.dotfile\").homeConfigurations.YOUR_USER.options";
+                home_manager.expr = "(builtins.getFlake \"/home/sunny/.dotfile\").homeConfigurations.sunny.options";
               };
             };
           };
