@@ -9,5 +9,4 @@
 
   programs.bat.enable = true;
 
-  networking.networkmanager.enable = true;
 }

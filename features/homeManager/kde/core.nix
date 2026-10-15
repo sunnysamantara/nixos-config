@@ -10,6 +10,8 @@
       overrideConfig = true;
     };
 
+    networking.networkmanager.enable = true;
+
     home.packages = [ pkgs.wayland-utils ];
   };
 }
