@@ -49,6 +49,16 @@
           provider = "open_router";
           model = "openrouter/auto";
         };
+        # Zed's ACP registry ships a generic-linux opencode that cannot run on
+        # NixOS (fails on stub-ld). Point the agent at the Nix-built binary
+        # instead. The key matches the registry entry, so the HM settings merge
+        # overrides its type = "registry". nix-ld (core feature) still covers
+        # Zed's other self-downloaded LSPs.
+        agent_servers.opencode = {
+          type = "custom";
+          command = "${pkgs.opencode}/bin/opencode";
+          args = [ "acp" ];
+        };
         project_panel.git_status = true;
         git.inline_blame.enabled = true;
         restore_on_startup = "last_session";

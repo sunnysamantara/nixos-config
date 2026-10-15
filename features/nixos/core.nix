@@ -13,6 +13,13 @@
     };
 
     config = {
+      # The NixOS system pkgs (built by nixosSystem from nixpkgs.hostPlatform +
+      # nixpkgs.overlays in core/hosts.nix) gets no config from the separately
+      # imported pkgs-unstable/stable-pkgs, so unfree (e.g. nvidia-x11 from the
+      # `nvidia` service) must be allowed here or pure-mode eval — and therefore
+      # every `nixos-rebuild switch` — fails.
+      nixpkgs.config.allowUnfree = true;
+
       # Error-prone: a host that forgets this fails evaluation with a clear message.
       assertions = [
         {
@@ -37,6 +44,13 @@
         clean.extraArgs = "--keep-since 15d --keep 5";
         flake = "${config.users.users.${cfg}.home}/.dotfile"; # home-derived, not hardcoded
       };
+
+      # FHS dynamic linker + default library set so generic dynamically-linked
+      # binaries (Zed's self-downloaded ACP agents/LSPs, npm globals, tarballs)
+      # run instead of dying on stub-ld ("NixOS cannot run dynamically linked
+      # executables"). `core` is a baseFeature -> every host gets it. The
+      # NIX_LD* vars are session-scoped, so a relogin is required after enabling.
+      programs.nix-ld.enable = true;
     };
   };
 }
