@@ -44,7 +44,8 @@
           {
             systemTray.items = {
               # Solaar's StatusNotifier id; keep it in the popup, not the bar.
-              hidden = [ "indicator-solaar" ];
+              # Nixdatifier likewise — its tray icon lives in the popup only.
+              hidden = [ "indicator-solaar" "Nixdatifier" ];
               shown = [
                 "org.kde.plasma.clipboard"
                 "org.kde.plasma.volume"
