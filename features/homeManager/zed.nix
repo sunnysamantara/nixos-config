@@ -21,7 +21,24 @@
       userSettings = {
         format_on_save = "on";
         formatter = "auto";
-        # window_decorations = "server";
+        # Let KWin draw the window titlebar/buttons instead of Zed. The titlebar
+        # row itself cannot be fully hidden in Zed 1.22 (title_bar.show was
+        # reverted), so blank its configurable elements and surface the
+        # project/branch/file info in the native window title instead.
+        window_decorations = "server";
+        window_title_format = "\${projectName}\${separator}\${branch}\${separator}\${fileName}";
+        title_bar = {
+          show_branch_status_icon = false;
+          show_branch_name = false;
+          show_worktree_name = false;
+          show_project_items = false;
+          show_onboarding_banner = false;
+          show_user_picture = false;
+          show_user_menu = false;
+          show_sign_in = false;
+          show_menus = false;
+          open_menus_on_hover = false;
+        };
         autosave = {
           after_delay = {
             milliseconds = 1000;

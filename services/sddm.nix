@@ -35,6 +35,17 @@
         #   CompositorCommand = "${pkgs.kdePackages.kwin}/bin/kwin_wayland --drm --no-lockscreen --no-global-shortcuts --locale1 --inputmethod plasma-keyboard";
         # };
       };
+
+      # SDDM reads /etc/sddm.conf.d/*.conf in sorted order, then /etc/sddm.conf
+      # last (highest precedence). KDE's Login Screen KCM (sddm-kcm) writes the
+      # untracked /etc/sddm.conf.d/kde_settings.conf, whose `Theme/Current`
+      # otherwise wins over NixOS's 00-nixos.conf. Pin the declared theme here so
+      # it always wins. Only the theme is pinned; everything else keeps SDDM's
+      # normal precedence.
+      environment.etc."sddm.conf".text = ''
+        [Theme]
+        Current=${config.services.displayManager.sddm.theme}
+      '';
     }
 
     # Avatars: configured only when at least one user set profile.picture.

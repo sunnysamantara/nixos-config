@@ -12,7 +12,7 @@
       "kde"
       "kdeconnect"
       "catppuccin"
-      "openlogi"
+      "solaar"
     ];
 
     # System services, matching flake.services.<name> in services/
@@ -23,6 +23,7 @@
       "sddm"
       "virt-manager"
       "openssh"
+      "network-manager"
     ];
 
     extra = [

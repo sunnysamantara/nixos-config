@@ -9,7 +9,7 @@
     pkgs.bitwarden-desktop
     pkgs.photocraft
     pkgs.scrcpy
-    pkgs.libreoffice-qt-fresh
+    pkgs.libreoffice-qt
     pkgs.gimp-with-plugins
   ];
 }

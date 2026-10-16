@@ -62,7 +62,7 @@ never be both — listing a service under `features` (or a feature under
 - Host key is `hosts.<attr>`, NOT the directory name: `hosts/skullsaints/default.nix`
   defines `hosts.skullsaint` → `.#skullsaint`.
 - `acer-aspire` (x86_64-linux): features sddm-sword (qylock, inert — see under
-  Catppuccin below), kde, kdeconnect, catppuccin, openlogi; services audio,
+  Catppuccin below), kde, kdeconnect, catppuccin, solaar; services audio,
   bluetooth, nvidia (Intel+NVIDIA prime sync; bus IDs are hardware-specific),
   sddm, virt-manager, openssh. Evaluates. Its `extra` overrides
   `catppuccin.sddm.background` with
@@ -114,8 +114,8 @@ never be both — listing a service under `features` (or a feature under
 - homeManager `kde/` family (dir features/homeManager/kde): `kde` (core — imports
   `inputs.plasma-manager.homeModules.plasma-manager`, plasma.enable), `kde-desktop`
   (panels/systray; `systemTray.items.hidden = [ "indicator-solaar" ]` keeps the
-  Solaar StatusNotifier icon in the popup, not the bar — safe when solaar is off,
-  it's just an unmatched id), `kde-workspace` (theming pkgs: catppuccin-kde/gtk, papirus,
+  Solaar StatusNotifier icon in the popup, not the bar — unmatched id when
+  solaar is off, otherwise it keeps the icon out of the bar), `kde-workspace` (theming pkgs: catppuccin-kde/gtk, papirus,
   graphite-cursors; look&feel, keyboard layout in/eng via
   `programs.plasma.input.keyboard`), `kde-kwin` (effects/titlebar/shortcuts +
   `inputs.kwin-effects-better-blur-dx` pkg), `kde-power` (powerdevil),
@@ -141,15 +141,16 @@ never be both — listing a service under `features` (or a feature under
   `kdeconnect` (avahi + firewall 1714-1764; acer-aspire only), `catppuccin`
   (imports `inputs.catppuccin.nixosModules.catppuccin`; global mocha/teal,
   cursors + SDDM theme; acer-aspire only), `solaar` (native `programs.solaar`:
-  `enable` + `userService.enable`/`window = "hide"`; module **kept but not
-  enabled on any host** — Solaar and OpenLogi fight over HID++ receiver access,
-  and acer-aspire runs `openlogi` instead), `openlogi` (local-first Logitech
+  `enable` + `userService.enable`/`window = "hide"`; **enabled on acer-aspire**
+  — Solaar and OpenLogi fight over HID++ receiver access, so only one may be
+  active), `openlogi` (local-first Logitech
   HID++ manager; **no longer a flake input** — the upstream module is inlined
   against `pkgs.openlogi`, the cached cache.nixos.org build, so there is no Rust
   compile; installs the package (CLI + `openlogi-gui` + `.desktop`),
   `70-openlogi.rules` via `services.udev.packages`, and
   `systemd.user.services.openlogi-agent` on `graphical-session.target`;
-  acer-aspire only), `internationalization` (base feature:
+  **kept but not enabled on any host** — displaced by `solaar` on acer-aspire),
+  `internationalization` (base feature:
   `time.timeZone = "Asia/Kolkata"`, `i18n.defaultLocale = "en_IN"` + `LC_*`
   extraSettings; keyboard layout lives in the HM `kde-workspace` feature).
 - services (nixos, `flake.services.<name>`), all moved out of `features/nixos/`:
@@ -190,18 +191,11 @@ never be both — listing a service under `features` (or a feature under
   flake/core. `user/` + `system/` dirs are stale leftovers grandfathered in.
 - `.gitignore`'s `system/hardware-configuration.nix` is stale; hardware lives at
   `hosts/<host>/_hardware.nix` and is committed.
-- **The two checkouts have DIVERGED — this is the #1 cause of "my changes do
-  nothing".** `/home/sunny/homeserver` is the flake you edit (new
-  `core/ features/ services/` layout, branch `nix-dendrite`). `/home/sunny/.dotfile`
-  is a **stale OLD-layout clone** (`system/` + `user/`, branch `main`, commit
-  `1dda335`, no `features/`/`core/`). `programs.nh.flake` points at
-  `${home}/.dotfile`, so `NH_FLAKE` is `/home/sunny/.dotfile` and **`nh os switch`
-  builds the old config and silently reverts your work.** Never apply via `nh`
-  here. Always:
-  `sudo nixos-rebuild switch --flake /home/sunny/homeserver#<host>`
-  (absolute path avoids cwd mistakes; `.#<host>` from inside `homeserver` is
-  equivalent). If you want `nh` to work, repoint `programs.nh.flake` at
-  `homeserver` and/or make `.dotfile` a real clone again.
+- `/home/sunny/homeserver` is the flake you edit (new `core/ features/ services/`
+  layout, branch `nix-dendrite`). `/home/sunny/.dotfile` is on branch `main`
+  with the new layout (commit `b8bc765`), so it's the same layout as `homeserver`
+  now. `programs.nh.flake` points at `${home}/.dotfile`. Prefer `sudo nixos-rebuild
+  switch --flake /home/sunny/homeserver#<host>` when in doubt.
 - **Diagnose "did it actually build/apply?"** `nixos-rebuild` can evaluate
   cleanly and still leave the old generation active if the new store path was
   never realized. Compare the running system with what the current flake wants:
