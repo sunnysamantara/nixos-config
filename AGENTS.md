@@ -24,8 +24,11 @@ never be both — listing a service under `features` (or a feature under
 ## Architecture
 - `flake.nix` imports `core/ features/ services/ users/ hosts/` via `import-tree`;
   every file is auto-imported EXCEPT names starting with `_` (`_pkg.nix`,
-  `_hardware.nix`) — import those explicitly (both `users/*/<name>.nix` import
-  `./_pkg.nix`).
+  `_hardware.nix`, `_disko.nix`) — import those explicitly (both
+  `users/*/<name>.nix` import `./_pkg.nix`). This is required for host-local
+  *raw NixOS modules*: an auto-imported file is treated as a flake-parts module,
+  so a `disko.devices`/`fileSystems` definition must live in a `_`-prefixed file
+  listed in the host's `extra`.
 - Feature/user files register `flake.modules.nixos.<name>` and
   `flake.modules.homeManager.<name>`. Service files register `flake.services.<name>`.
 - `core/services.nix` declares the `flake.services` registry (`lazyAttrsOf
@@ -70,9 +73,18 @@ never be both — listing a service under `features` (or a feature under
 - `skullsaint` (x86_64-linux, users sunny+route): **router machine** — will do
   WAN↔LAN routing, NAT, DHCP/DNS, so it must NOT run NetworkManager (client-side
   tool that fights static router interfaces). Ethernet takes over; no Plasma/KDE.
-  `_hardware.nix` is committed, so it evaluates. Regenerate it on the machine
-  with `nixos-generate-config --show-hardware-config > hosts/skullsaints/_hardware.nix`.
-  No host features; services openssh (plus `boot` via `baseServices`).
+  Disk layout is **disko-declarative**: `hosts/skullsaints/_disko.nix` (2G ESP
+  /boot, 8G swap, 100G btrfs root subvol `@`, rest btrfs /home; device
+  placeholder `/dev/nvme0n1`, overridden at deploy with
+  `nixos-anywhere --disk main <dev>`), and `_hardware.nix` holds only the
+  non-disk bits (initrd modules incl. `virtio_*` for VM targets, kvm-intel,
+  Intel microcode) — it is hand-maintained, never `nixos-generate-config`.
+  The old committed `_hardware.nix` was a byte-copy of acer-aspire's (same
+  UUIDs) until replaced by this. Deploy (DESTROYS the target disk):
+  `nix run github:nix-community/nixos-anywhere -- --flake .#skullsaint --disk
+  main /dev/nvme0n1 root@<ip>`; the target disk must be ≥ ~110G (fixed 100G
+  root partition). features disko; services openssh (plus `boot` via
+  `baseServices`).
 
 ## Current features / users
 - homeManager: `zsh` (shell + SHELL env), `fastfetch` (logo commented out),
@@ -152,7 +164,10 @@ never be both — listing a service under `features` (or a feature under
   **kept but not enabled on any host** — displaced by `solaar` on acer-aspire),
   `internationalization` (base feature:
   `time.timeZone = "Asia/Kolkata"`, `i18n.defaultLocale = "en_IN"` + `LC_*`
-  extraSettings; keyboard layout lives in the HM `kde-workspace` feature).
+  extraSettings; keyboard layout lives in the HM `kde-workspace` feature),
+  `disko` (import-only: imports `inputs.disko.nixosModules.disko` so a host's
+  `extra` can carry `disko.devices.*`; enabled on skullsaint only — hosts
+  without a disko config get no effect from it).
 - services (nixos, `flake.services.<name>`), all moved out of `features/nixos/`:
   `boot` (base service: GRUB/EFI loader with OS-prober, `configurationLimit 10`,
   `default = "saved"`, systemd-boot disabled; every host via `baseServices`),
@@ -218,9 +233,12 @@ never be both — listing a service under `features` (or a feature under
   `extraGroups` or a host's `extra`. NixOS auto-derives `users.groups.*.members`
   from `extraGroups`.
 - Stability-sensitive packages → `stable-pkgs.X`; newest → `pkgs.X`.
-- Never hand-edit `_hardware.nix`; regenerate with `nixos-generate-config`.
+- Never hand-edit `_hardware.nix`; regenerate with `nixos-generate-config`
+  (exception: skullsaint's is hand-maintained — it carries only non-disk bits,
+  filesystems come from `_disko.nix`).
 - Pull external modules (e.g. nvf) via the flake's `homeManagerModules.default` /
-  `nixosModules.default` in the feature file.
+  `nixosModules.default` (or `nixosModules.disko`) in the feature file; capture
+  `inputs` in the OUTER flake-parts function (see `features/nixos/disko.nix`).
 - Keep per-user/per-host package lists in `_pkg.nix` files, not inline modules.
 - Run `nix flake check` after changes (validates both hosts).
 

@@ -11,15 +11,6 @@
         nixdatifierPkgs.nixdatifier
       ];
 
-      home.activation.nixdatifierFlakePath = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        cfg="${config.home.homeDirectory}/.config/nixdatifier/standalone.json"
-        tmp="$cfg.tmp.$$"
-        ${pkgs.jq}/bin/jq --arg p "${config.home.homeDirectory}/.dotfile" \
-          '. + {flakePath: $p}' <(if [ -s "$cfg" ]; then cat "$cfg"; else echo '{}'; fi) > "$tmp" \
-          && ${pkgs.coreutils}/bin/install -m 644 "$tmp" "$cfg"
-        ${pkgs.coreutils}/bin/rm -f "$tmp"
-      '';
-
       home.file.".config/autostart/nixdatifier.desktop" = {
         text = ''
           [Desktop Entry]
