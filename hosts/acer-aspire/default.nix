@@ -35,7 +35,7 @@
         # core is a base feature; sunny owns the .dotfile flake on this host.
         core.dotfileUser = "sunny";
         # Host-specific SDDM background for catppuccin.sddm.
-        catppuccin.sddm.background = ./resources/garfield.jpeg;
+        catppuccin.sddm.background = ./resources/itachi-sharingan.jpg;
       }
     ];
   };
