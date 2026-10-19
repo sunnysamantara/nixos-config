@@ -180,6 +180,18 @@
         "type": "github"
       }
     },
+    "nix-secrets": {
+      "locked": {
+        "lastModified": 1792269501,
+        "narHash": "sha256-FAdXZwluyQJr792Br2e4RniyKt3+WdsQrrWA8wMz5iQ=",
+        "path": "/home/sunny/homeserver/secrets",
+        "type": "path"
+      },
+      "original": {
+        "path": "/home/sunny/homeserver/secrets",
+        "type": "path"
+      }
+    },
     "nixdatifier": {
       "inputs": {
         "nixpkgs": [
@@ -357,13 +369,35 @@
         "home-manager": "home-manager",
         "import-tree": "import-tree",
         "kwin-effects-better-blur-dx": "kwin-effects-better-blur-dx",
+        "nix-secrets": "nix-secrets",
         "nixdatifier": "nixdatifier",
         "nixpkgs": "nixpkgs",
         "nixpkgs-stable": "nixpkgs-stable",
         "nvf": "nvf",
         "obsidian-extensions": "obsidian-extensions",
         "plasma-manager": "plasma-manager",
-        "qylock": "qylock"
+        "qylock": "qylock",
+        "sops-nix": "sops-nix"
+      }
+    },
+    "sops-nix": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1792056300,
+        "narHash": "sha256-YU1LjDe1o2Ymg5zEiCHbmMXLkDCtxHQRiVqZ3nC5GGk=",
+        "owner": "Mic92",
+        "repo": "sops-nix",
+        "rev": "44931708c62937c2b1bf7953902989fa5bb9ee1b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Mic92",
+        "repo": "sops-nix",
+        "type": "github"
       }
     },
     "systems": {

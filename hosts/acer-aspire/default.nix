@@ -1,4 +1,4 @@
-{ ... }:
+{ inputs, ... }:
 {
   hosts.acer-aspire = {
     # hostname defaults to the attribute name ("acer-aspire")
@@ -36,6 +36,13 @@
         core.dotfileUser = "sunny";
         # Host-specific SDDM background for catppuccin.sddm.
         catppuccin.sddm.background = ./resources/itachi-sharingan.jpg;
+      }
+      {
+        sops = {
+          defaultSopsFile = inputs.nix-secrets + "/hosts/acer-aspire.yaml";
+          secrets."users/sunny" = { neededForUsers = true; };
+        };
+        users.users.root.hashedPassword = "!";
       }
     ];
   };
