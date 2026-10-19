@@ -28,9 +28,9 @@
         sops = {
           defaultSopsFile = inputs.nix-secrets + "/hosts/skullsaint.yaml";
           secrets."users/route" = { neededForUsers = true; };
-          secrets."root_password" = { neededForUsers = true; };
+          # secrets."root_password" = { neededForUsers = true; };
         };
-        users.users.root.hashedPasswordFile = config.sops.secrets."root_password".path;
+        # users.users.root.hashedPasswordFile = config.sops.secrets."root_password".path;
       }
     ];
   };

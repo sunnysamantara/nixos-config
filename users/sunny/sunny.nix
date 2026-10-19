@@ -1,7 +1,7 @@
 { inputs, config, ... }:
 {
   # System side: the account itself (used by hosts that list "sunny").
-  flake.modules.nixos.sunny = { pkgs, ... }: {
+  flake.modules.nixos.sunny = { config, pkgs, ... }: {
     users.users.sunny = {
       isNormalUser = true;
       home = "/home/sunny";

@@ -2,7 +2,7 @@
 {
   # Account and home basics (isNormalUser, username, homeDirectory, _pkg.nix)
   # come automatically from core/users.nix. Only route-specific settings here.
-  flake.modules.nixos.route = { ... }: {
+  flake.modules.nixos.route = { config, ... }: {
     users.users.route = {
       isNormalUser = true;
       home = "/home/route";
