@@ -182,14 +182,17 @@
     },
     "nix-secrets": {
       "locked": {
-        "lastModified": 1792269501,
-        "narHash": "sha256-FAdXZwluyQJr792Br2e4RniyKt3+WdsQrrWA8wMz5iQ=",
-        "path": "/home/sunny/homeserver/secrets",
-        "type": "path"
+        "lastModified": 1792407365,
+        "narHash": "sha256-suBcsiVgm1yBglyN+j0JnEAOqwQE/t9UuM/VWpF/DEQ=",
+        "ref": "refs/heads/main",
+        "rev": "318588cb56af99c3cc73597d952b38ee78d98fec",
+        "revCount": 2,
+        "type": "git",
+        "url": "ssh://git@github.com/sunnysamantara/nix-secrets"
       },
       "original": {
-        "path": "/home/sunny/homeserver/secrets",
-        "type": "path"
+        "type": "git",
+        "url": "ssh://git@github.com/sunnysamantara/nix-secrets"
       }
     },
     "nixdatifier": {

@@ -41,7 +41,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nix-secrets = {
-      url = "path:/home/sunny/homeserver/secrets";
+      url = "git+ssh://git@github.com/sunnysamantara/nix-secrets";
     };
     sops-nix = {
       url = "github:Mic92/sops-nix";

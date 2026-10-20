@@ -67,8 +67,10 @@ never be both — listing a service under `features` (or a feature under
 ## Secrets management
 - Secrets live in `secrets/` — a **private git repo** (remote:
   `git@github.com:sunnysamantara/nix-secrets.git`) nested inside the main flake
-  repo. It is untracked in the main repo and referenced as a flake input
-  (`inputs.nix-secrets`).
+  repo. It is a git submodule (the editing working copy). Eval does NOT read
+  it from the working tree — the flake input is the GitHub repo itself:
+  `inputs.nix-secrets.url = "git+ssh://git@github.com/sunnysamantara/nix-secrets"`,
+  locked by rev in `flake.lock`.
 - **Hard rule: NEVER push any code to the secrets repo.** Only encrypted
   secret files (`.yaml`, `.json`, etc. encrypted with sops) are allowed.
   No source code, no configuration files, no plaintext files.
@@ -97,7 +99,9 @@ never be both — listing a service under `features` (or a feature under
   1. Edit the appropriate file in `secrets/`.
   2. Run `nix-shell -p sops --run "sops secrets/<file>.yaml"`.
   3. Commit and push to the private repo.
-  4. Rebuild and deploy the affected host(s).
+  4. In the main repo: `nix flake update nix-secrets` (relocks the input to
+     the pushed rev — eval uses the GitHub repo, NOT the local working tree).
+  5. Commit the updated `flake.lock` and rebuild/deploy the affected host(s).
 - **YubiKey setup:** `age-plugin-yubikey` generates the age identity on the
   YubiKey. The public key is added to ALL creation rules in `.sops.yaml`.
   The YubiKey is used for emergency access and initial setup, not for normal
@@ -270,8 +274,16 @@ never be both — listing a service under `features` (or a feature under
 - `build-vm` output is separate: `result -> …-nixos-vm` plus
   `hosts/acer-aspire.qcow2`. A host-side `switch` does not update a booted VM,
   and a switch done inside the VM does not update the host.
-- Secrets are in a separate private repo (`secrets/`). The flake input
-  `inputs.nix-secrets` must be accessible for evaluation.
+- Secrets are in a separate private repo (`secrets/` submodule). The flake input
+  `inputs.nix-secrets` is `git+ssh://git@github.com/sunnysamantara/nix-secrets`
+  — the **invoking user** must be able to fetch it over SSH (private repo):
+  a key with repo access in `~/.ssh/` + github.com in `known_hosts`. Plain
+  `nixos-rebuild switch --flake .#host` evals as you (key in your `~/.ssh`);
+  `sudo nixos-rebuild`/`sudo nh` evals as root → root needs its own key in
+  `/root/.ssh/` (read-only deploy key from the nix-secrets repo, installed as
+  `/root/.ssh/id_ed25519` + `/root/.ssh/known_hosts`; generated 2026-10-20,
+  pubkey must be added as a read-only deploy key on GitHub). Same-key copies
+  are safe: use the read-only deploy key everywhere, never an account key.
 - Host machine keys at `/var/lib/sops-nix/key.txt` must exist before first
   boot. sops-nix generates them if missing, but then the public key won't
   match `.sops.yaml`.
@@ -302,6 +314,13 @@ Findings from back-testing the flake against legacy `system/`+`user/` and from
 isolated module evals. Learn these before adding features.
 
 ### Fixed in-tree
+- `features/nixos/sops.nix` set `sops.defaultSopsFile = …/common.yaml` at default
+  priority, conflicting (same priority, different value) with each host's
+  `sops.defaultSopsFile` override in `extra` — full toplevel eval died with
+  "option `sops.defaultSopsFile' has conflicting definition values". It stayed
+  hidden while the old `path:` secret input failed earlier (NAR mismatch), and
+  `nix flake check` doesn't force the sops options. Fix: wrapped in
+  `lib.mkDefault` so the host file wins (base = common.yaml fallback).
 - The `nvidia` service (unfree `nvidia-x11` via `hardware.graphics`) made
   pure-mode eval — i.e. every plain `sudo nixos-rebuild switch --flake .#<host>` —
   fail with `Refusing to evaluate package 'nvidia-x11'`, so no new system
@@ -397,8 +416,10 @@ not force every option, so dump specific ones with
 ## Secrets management
 - Secrets live in `secrets/` — a **private git repo** (remote:
   `git@github.com:sunnysamantara/nix-secrets.git`) nested inside the main flake
-  repo. It is untracked in the main repo and referenced as a flake input
-  (`inputs.nix-secrets`).
+  repo. It is a git submodule (the editing working copy). Eval does NOT read
+  it from the working tree — the flake input is the GitHub repo itself:
+  `inputs.nix-secrets.url = "git+ssh://git@github.com/sunnysamantara/nix-secrets"`,
+  locked by rev in `flake.lock`.
 - **Hard rule: NEVER push any code to the secrets repo.** Only encrypted
   secret files (`.yaml`, `.json`, etc. encrypted with sops) are allowed.
   No source code, no configuration files, no plaintext files.
@@ -427,7 +448,9 @@ not force every option, so dump specific ones with
   1. Edit the appropriate file in `secrets/`.
   2. Run `nix-shell -p sops --run "sops secrets/<file>.yaml"`.
   3. Commit and push to the private repo.
-  4. Rebuild and deploy the affected host(s).
+  4. In the main repo: `nix flake update nix-secrets` (relocks the input to
+     the pushed rev — eval uses the GitHub repo, NOT the local working tree).
+  5. Commit the updated `flake.lock` and rebuild/deploy the affected host(s).
 - **YubiKey setup:** `age-plugin-yubikey` generates the age identity on the
   YubiKey. The public key is added to ALL creation rules in `.sops.yaml`.
   The YubiKey is used for emergency access and initial setup, not for normal
