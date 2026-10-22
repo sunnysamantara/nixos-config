@@ -30,6 +30,7 @@
           secrets."users/route" = { neededForUsers = true; };
           # secrets."root_password" = { neededForUsers = true; };
         };
+        users.mutableUsers = false;
         # users.users.root.hashedPasswordFile = config.sops.secrets."root_password".path;
       }
     ];

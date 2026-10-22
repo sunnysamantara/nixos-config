@@ -42,6 +42,7 @@
           defaultSopsFile = inputs.nix-secrets + "/hosts/acer-aspire.yaml";
           secrets."users/sunny" = { neededForUsers = true; };
         };
+        users.mutableUsers = false;
         users.users.root.hashedPassword = "!";
       }
     ];
