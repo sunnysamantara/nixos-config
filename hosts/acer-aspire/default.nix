@@ -24,6 +24,7 @@
       "virt-manager"
       "openssh"
       "network-manager"
+      "yubikey"
     ];
 
     extra = [
@@ -41,6 +42,9 @@
         sops = {
           defaultSopsFile = inputs.nix-secrets + "/hosts/acer-aspire.yaml";
           secrets."users/sunny" = { neededForUsers = true; };
+          secrets."u2f_keys" = {
+            mode = "0444";
+          };
         };
         users.mutableUsers = false;
         users.users.root.hashedPassword = "!";

@@ -183,3 +183,5 @@ One age X25519 identity per line; `#` lines are comments:
 # public key: age1npsqgr6r7st4xxkjffnulhncpwtw6upex8pj0s04yq8mx0faccwqq5gwts
 AGE-SECRET-KEY-1...
 ```
+
+sudo install -Dm600 ~/.secrets/user_sunny.txt ~/.config/sops/age/keys.txt
