@@ -116,7 +116,7 @@ never be both — listing a service under `features` (or a feature under
 - `acer-aspire` (x86_64-linux): features sddm-sword (qylock, inert — see under
   Catppuccin below), kde, kdeconnect, catppuccin, solaar; services audio,
   bluetooth, nvidia (Intel+NVIDIA prime sync; bus IDs are hardware-specific),
-  sddm, virt-manager, openssh. Evaluates. Its `extra` overrides
+  sddm, virt-manager, openssh, network-manager, yubikey. Evaluates. Its `extra` overrides
   `catppuccin.sddm.background` with
   the host-local `hosts/acer-aspire/resources/garfield.jpeg`.
 - `skullsaint` (x86_64-linux, users sunny+route): **router machine** — will do
@@ -150,7 +150,8 @@ never be both — listing a service under `features` (or a feature under
   user/init settings, `git-filter-repo` in `home.packages`; also `programs.lazygit`
   + zsh integration, merged in from the old `lazygit` feature), `catppuccin` (imports
   `inputs.catppuccin.homeModules.catppuccin`; global mocha/teal + brave/firefox/
-  obs/qt5ct/lazygit/opencode/zsh-syntax-highlighting toggles; neovim theming lives in
+  obs/qt5ct/lazygit/zsh-syntax-highlighting toggles (opencode handled separately,
+  see its bullet); neovim theming lives in
   `neovim.nix` via nvf `vim.theme = "catppuccin"`), `obsidian`
   (`programs.obsidian`; vault `notes` → `Documents/Obsidian`; community plugins
   `dataview`/`obsidian-git`/`obsidian-importer`/`vim-yank-highlight` + `catppuccin`
@@ -158,8 +159,9 @@ never be both — listing a service under `features` (or a feature under
   **feature-local** `import inputs.nixpkgs { overlays = [ inputs.obsidian-extensions.overlays.default ]; }`
   — no global overlay), `opencode` (`programs.opencode` minimal: enable +
   `extraPackages` ripgrep/fd/fzf; NO `model` set so you pick one via `/models`;
-  TUI theme owned by the `catppuccin` feature's `catppuccin.opencode` toggle,
-  which sets `programs.opencode.tui.theme`), `devenv` (`programs.direnv`
+  OpenCode 2 theme is owned by the `catppuccin` feature: `catppuccin.opencode`
+  is disabled (it only writes the old `tui.theme`) and `programs.opencode.cli.theme`
+  is set to `{ name = "catppuccin"; mode = "dark"; }`), `devenv` (`programs.direnv`
   + `nix-direnv` + `programs.devenv`; import-only like the simple features),
   `profile-picture` (option
   `profile.picture` (path, default null) → `~/.face` + `~/.face.icon`; the
@@ -199,7 +201,7 @@ never be both — listing a service under `features` (or a feature under
   `inputs.qylock.nixosModules.default`; `sddm.enable = false` so theming is owned
   by `catppuccin`; acer-aspire only), `kde` (minimal:
   `services.desktopManager.plasma6.enable` + Discover excluded; acer-aspire only),
-  `kdeconnect` (avahi + firewall 1714-1764; acer-aspire only), `catppuccin`
+  `kdeconnect` (avahi via `settings.publish` + firewall 1714-1764; acer-aspire only), `catppuccin`
   (imports `inputs.catppuccin.nixosModules.catppuccin`; global mocha/teal,
   cursors + SDDM theme; acer-aspire only), `solaar` (native `programs.solaar`:
   `enable` + `userService.enable`/`window = "hide"`; **enabled on acer-aspire**
@@ -234,7 +236,11 @@ never be both — listing a service under `features` (or a feature under
   `<user>.face.icon` symlink) and sets SDDM `Theme.FacesDir`; all of it is
   `lib.mkIf (withPicture != { })`, and `services.accounts-daemon` is **not**
   managed here since Plasma enables it; acer-aspire), `virt-manager` (libvirtd/
-  kvm users opt in via `extraGroups`; acer-aspire).
+  kvm users opt in via `extraGroups`; acer-aspire), `network-manager`
+  (`networking.networkmanager.enable`; acer-aspire only), `yubikey`
+  (`services/pcscd` + `programs.yubikey-manager`, `security.pam.u2f` with
+  `/run/secrets/u2f_keys`; per-service PAM rules: `login` requires password then
+  YubiKey, `sudo`/`kde` accept either; acer-aspire).
 - users: `sunny` (both hosts; extraGroups wheel/networkmanager/libvirtd/kvm),
   `route` (skullsaint only); packages: sunny `pkgs.lshw`, route `stable-pkgs.wget`,
   acer-aspire `pkgs.lshw`, skullsaints `stable-pkgs.lshw`.

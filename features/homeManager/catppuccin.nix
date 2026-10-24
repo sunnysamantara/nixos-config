@@ -16,8 +16,15 @@
         assertPlatformTheme = true;
       };
       lazygit.enable = true;
-      opencode.enable = true; # sets programs.opencode.tui.theme
+      # OpenCode 2 moved tui.json to cli.json; catppuccin's module only sets
+      # programs.opencode.tui, so we wire the theme up ourselves below.
+      opencode.enable = false;
       zsh-syntax-highlighting.enable = true;
+    };
+
+    programs.opencode.cli.theme = {
+      name = "catppuccin"; # mocha
+      mode = "dark";
     };
   };
 }

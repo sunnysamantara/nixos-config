@@ -7,10 +7,10 @@
     services.avahi = {
       enable = true; # service discovery
       nssmdns4 = true;
-      publish = {
-        enable = true;
-        addresses = true;
-        userServices = true;
+      settings.publish = {
+        "disable-publishing" = false;
+        "disable-user-service-publishing" = false;
+        "publish-addresses" = true;
       };
     };
 

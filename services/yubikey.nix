@@ -49,16 +49,15 @@
     # require both password and YubiKey
     security.pam.services.login.rules.auth = {
       unix = {
-        order = lib.mkOrder 50;
         control = lib.mkForce "required";
         modulePath = "${pkgs.pam}/lib/security/pam_unix.so";
         settings = {
-          nullok = false;
-          try_first_pass = false;
+          nullok = lib.mkForce false;
+          try_first_pass = lib.mkForce false;
         };
       };
       u2f = {
-        order = lib.mkOrder 100;
+        order = config.security.pam.services.login.rules.auth.unix.order + 10;
         control = lib.mkForce "required";
         modulePath = "${pkgs.pam_u2f}/lib/security/pam_u2f.so";
         settings = {
@@ -72,7 +71,7 @@
     # Sudo: either password OR YubiKey
     security.pam.services.sudo.rules.auth = {
       u2f = {
-        order = lib.mkOrder 50;
+        order = config.security.pam.services.sudo.rules.auth.unix.order - 10;
         control = lib.mkForce "sufficient";
         modulePath = "${pkgs.pam_u2f}/lib/security/pam_u2f.so";
         settings = {
@@ -82,12 +81,11 @@
         };
       };
       unix = {
-        order = lib.mkOrder 100;
         control = lib.mkForce "sufficient";
         modulePath = "${pkgs.pam}/lib/security/pam_unix.so";
         settings = {
-          nullok = false;
-          try_first_pass = true;
+          nullok = lib.mkForce false;
+          try_first_pass = lib.mkForce true;
         };
       };
     };
@@ -95,7 +93,7 @@
     # KDE/lockscreen: either password OR YubiKey
     security.pam.services.kde.rules.auth = {
       u2f = {
-        order = lib.mkOrder 50;
+        order = config.security.pam.services.kde.rules.auth.unix.order - 10;
         control = lib.mkForce "sufficient";
         modulePath = "${pkgs.pam_u2f}/lib/security/pam_u2f.so";
         settings = {
@@ -105,12 +103,11 @@
         };
       };
       unix = {
-        order = lib.mkOrder 100;
         control = lib.mkForce "sufficient";
         modulePath = "${pkgs.pam}/lib/security/pam_unix.so";
         settings = {
-          nullok = false;
-          try_first_pass = true;
+          nullok = lib.mkForce false;
+          try_first_pass = lib.mkForce true;
         };
       };
     };
