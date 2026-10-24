@@ -1,4 +1,4 @@
-{ ... }:
+{ pkgs, lib, ... }:
 {
   flake.services.yubikey = { pkgs, config, lib, ... }: {
     # Enable PCSCd and YubiKey udev rules
@@ -11,10 +11,10 @@
       pamtester
     ];
 
-    # Configure PAM U2F
+    # Base U2F configuration
     security.pam.u2f = {
       enable = true;
-      control = "sufficient";
+      control = "sufficient"; # overridden per-service as needed
       settings = {
         authfile = "/run/secrets/u2f_keys";
         cue = true;
@@ -25,14 +25,94 @@
     # Enable U2F for specific PAM services
     # SDDM uses 'login' substack, KScreenLocker uses 'kde'
     security.pam.services = {
-      login.u2fAuth = true;
-      sudo.u2fAuth = true;
-      kde.u2fAuth = true;
+      # Login/SDDM - require both factors, kwallet must get password
+      login = {
+        u2fAuth = true;
+        unixAuth = true;
+        kwallet.enable = true;
+      };
+      # Lockscreen (kscreenlocker) - either-or
+      kde = {
+        u2fAuth = true;
+        unixAuth = true;
+        kwallet.enable = true;
+      };
+      # Sudo - either-or
+      sudo = {
+        u2fAuth = true;
+        unixAuth = true;
+      };
     };
 
-    # Keep KWallet enabled for unlock - will only auto-unlock if pam_unix provides PAM_AUTHTOK
-    # (i.e., if U2F fails/times out and falls back to password)
-    security.pam.services.login.kwallet.enable = true;
-    security.pam.services.kde.kwallet.enable = true;
+    # Enforce ordering/controls per service
+    # Login/SDDM: collect password first so pam_unix sets PAM_AUTHTOK for kwallet,
+    # require both password and YubiKey
+    security.pam.services.login.rules.auth = {
+      unix = {
+        order = lib.mkOrder 50;
+        control = lib.mkForce "required";
+        modulePath = "${pkgs.pam}/lib/security/pam_unix.so";
+        settings = {
+          nullok = false;
+          try_first_pass = false;
+        };
+      };
+      u2f = {
+        order = lib.mkOrder 100;
+        control = lib.mkForce "required";
+        modulePath = "${pkgs.pam_u2f}/lib/security/pam_u2f.so";
+        settings = {
+          authfile = "/run/secrets/u2f_keys";
+          cue = true;
+          interactive = false;
+        };
+      };
+    };
+
+    # Sudo: either password OR YubiKey
+    security.pam.services.sudo.rules.auth = {
+      u2f = {
+        order = lib.mkOrder 50;
+        control = lib.mkForce "sufficient";
+        modulePath = "${pkgs.pam_u2f}/lib/security/pam_u2f.so";
+        settings = {
+          authfile = "/run/secrets/u2f_keys";
+          cue = true;
+          interactive = false;
+        };
+      };
+      unix = {
+        order = lib.mkOrder 100;
+        control = lib.mkForce "sufficient";
+        modulePath = "${pkgs.pam}/lib/security/pam_unix.so";
+        settings = {
+          nullok = false;
+          try_first_pass = true;
+        };
+      };
+    };
+
+    # KDE/lockscreen: either password OR YubiKey
+    security.pam.services.kde.rules.auth = {
+      u2f = {
+        order = lib.mkOrder 50;
+        control = lib.mkForce "sufficient";
+        modulePath = "${pkgs.pam_u2f}/lib/security/pam_u2f.so";
+        settings = {
+          authfile = "/run/secrets/u2f_keys";
+          cue = true;
+          interactive = false;
+        };
+      };
+      unix = {
+        order = lib.mkOrder 100;
+        control = lib.mkForce "sufficient";
+        modulePath = "${pkgs.pam}/lib/security/pam_unix.so";
+        settings = {
+          nullok = false;
+          try_first_pass = true;
+        };
+      };
+    };
   };
 }
