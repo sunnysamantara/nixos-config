@@ -40,8 +40,8 @@ never be both — listing a service under `features` (or a feature under
   `_pkg.nix`, stateVersion). The two resolvers throw readable errors for unknown
   or mis-categorised names.
 - Users opt into homeManager features via `imports` in their `<name>.nix`
-  (`zsh fastfetch neovim oh-my-posh zed kde-all git catppuccin obsidian opencode
-  devenv`); hosts
+  (`zsh fastfetch neovim oh-my-posh zed delta kde-all git catppuccin obsidian
+  opencode devenv`); hosts
   opt into nixos features via `features = [...]` and system services via
   `services = [...]`.
 - Feature/service files are themselves flake-parts modules: a top-level fn only
@@ -145,7 +145,14 @@ never be both — listing a service under `features` (or a feature under
   so the HM settings merge overrides its `type = "registry"`, which otherwise
   downloads a generic-linux opencode that cannot run on NixOS; note the store
   path is `pkgs.opencode` (bundles ripgrep) not the `programs.opencode`
-  extraPackages wrapper, so fd/fzf are not injected), `git`
+  extraPackages wrapper, so fd/fzf are not injected), `delta` (`features/homeManager/delta.nix`;
+  Zed Industries' standalone Delta AI/agent editor, installed from the official
+  `inputs.delta` flake — `github:zed-industries/delta-nix`, with
+  `inputs.nixpkgs.follows = "nixpkgs"` so its proprietary Linux binary links the
+  host graphics stack (`/run/opengl-driver`); `home.packages` only, no options,
+  ships its own `.desktop`/icons; upstream sets `allowUnfree` internally, so no
+  repo-side unfree wiring; `x86_64-linux`/`aarch64-linux` only; pulled in by
+  `sunny`, not `route`), `git`
   (`programs.git` — lfs, SSH signing via `~/.ssh/github.pub` + `signByDefault`,
   user/init settings, `git-filter-repo` in `home.packages`; also `programs.lazygit`
   + zsh integration, merged in from the old `lazygit` feature), `catppuccin` (imports

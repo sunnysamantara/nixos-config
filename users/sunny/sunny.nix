@@ -26,6 +26,7 @@
       neovim
       oh-my-posh
       zed
+      delta
       kde-all
       openssh
       git
