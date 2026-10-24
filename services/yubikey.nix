@@ -24,7 +24,7 @@
 
     # Enable U2F for specific PAM services
     security.pam.services = {
-      # Login/SDDM - require both factors, kwallet must get password
+      # Login/SDDM - password only for now to fix login
       login = {
         unixAuth = true;
         kwallet.enable = true;
@@ -32,37 +32,18 @@
       # Lockscreen (kscreenlocker) - either-or
       kde = {
         unixAuth = true;
+        u2fAuth = true;
         kwallet.enable = true;
       };
       # Sudo - either-or
       sudo = {
         unixAuth = true;
+        u2fAuth = true;
       };
     };
 
-    # Login/SDDM: collect password first so pam_unix sets PAM_AUTHTOK for kwallet,
-    # require both password and YubiKey
-    security.pam.services.login.rules.auth = {
-      unix = {
-        order = 10;
-        control = lib.mkForce "required";
-        modulePath = lib.mkForce "${pkgs.pam}/lib/security/pam_unix.so";
-        settings = lib.mkForce {
-          nullok = false;
-          try_first_pass = false;
-        };
-      };
-      u2f = {
-        order = 20;
-        control = lib.mkForce "required";
-        modulePath = lib.mkForce "${pkgs.pam_u2f}/lib/security/pam_u2f.so";
-        settings = lib.mkForce {
-          authfile = "/run/secrets/u2f_keys";
-          cue = true;
-          interactive = false;
-        };
-      };
-    };
+    # SDDM/login: password only, ensure kwallet can get PAM_AUTHTOK
+    security.pam.services.login.rules.auth = { };
 
     # Sudo: either password OR YubiKey
     security.pam.services.sudo.rules.auth = {
