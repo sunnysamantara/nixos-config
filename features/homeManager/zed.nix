@@ -16,7 +16,7 @@
         nixd # Nix Language Server
         nixfmt # Nix formatter
       ];
-      home.files.".config/kwinrulesrc".text = ''
+      home.file.".config/kwinrulesrc".text = ''
         [General]
         count=1
         rules=ZedNoTitlebar

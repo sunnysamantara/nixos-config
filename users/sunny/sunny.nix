@@ -1,7 +1,7 @@
-{ config, ... }:
+{ inputs, config, ... }:
 {
   # System side: the account itself (used by hosts that list "sunny").
-  flake.modules.nixos.sunny = { pkgs, ... }: {
+  flake.modules.nixos.sunny = { config, pkgs, ... }: {
     users.users.sunny = {
       isNormalUser = true;
       home = "/home/sunny";
@@ -13,7 +13,7 @@
         "kvm" # needed for virt-manager/KVM device access
       ];
       # Keep your existing password setup here (hashedPassword / hashedPasswordFile).
-      hashedPassword = "$6$12wVJVGjT1QWyeXO$b4UONtpR0jEmqBhrqNJJx644GNfBqPXGzqZbMZtAjaUULYxdTzA63vWF9UgNncrloDcunTZ.rGhKESv6pu9un0";
+      hashedPasswordFile = config.sops.secrets."users/sunny".path;
     };
   };
 
@@ -26,6 +26,7 @@
       neovim
       oh-my-posh
       zed
+      delta
       kde-all
       openssh
       git
@@ -41,5 +42,10 @@
     # home.username / home.homeDirectory are derived from users.users.sunny.
     # Keep the value from your current home-manager config.
     home.stateVersion = "25.11";
+
+    sops = {
+      age.keyFile = "/home/sunny/.config/sops/age/keys.txt";
+      defaultSopsFile = inputs.nix-secrets + "/users/sunny.yaml";
+    };
   };
 }

@@ -45,7 +45,7 @@ let
   };
 
   # NixOS features included on every host, in addition to each host's own list.
-  baseFeatures = [ "core" "internationalization" ];
+  baseFeatures = [ "core" "internationalization" "sops" ];
 
   # System services included on every host, in addition to each host's own list.
   baseServices = [ "boot" ];
@@ -86,6 +86,7 @@ let
       };
       modules = [
         inputs.home-manager.nixosModules.home-manager
+        inputs.sops-nix.nixosModules.sops
         {
           nixpkgs.hostPlatform = host.system;
           networking.hostName = host.hostname;
@@ -97,6 +98,7 @@ let
               inherit inputs stable-pkgs;
               pkgs = pkgs-unstable;
             };
+            sharedModules = [ inputs.sops-nix.homeManagerModules.sops ];
             users = lib.genAttrs host.users (getMod "homeManager");
           };
         }

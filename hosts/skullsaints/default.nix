@@ -1,4 +1,4 @@
-{ ... }:
+{ inputs, ... }:
 {
   hosts.skullsaint = {
     # hostname defaults to the attribute name ("skullsaint")
@@ -23,6 +23,15 @@
         # core is a base feature; route owns the .dotfile flake on this host.
         core.dotfileUser = "route";
         system.stateVersion = "25.11";
+      }
+      {
+        sops = {
+          defaultSopsFile = inputs.nix-secrets + "/hosts/skullsaint.yaml";
+          secrets."users/route" = { neededForUsers = true; };
+          # secrets."root_password" = { neededForUsers = true; };
+        };
+        users.mutableUsers = false;
+        # users.users.root.hashedPasswordFile = config.sops.secrets."root_password".path;
       }
     ];
   };

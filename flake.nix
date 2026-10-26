@@ -40,6 +40,17 @@
       url = "github:Muddyblack/nixdatifier";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    delta = {
+      url = "github:zed-industries/delta-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    nix-secrets = {
+      url = "git+ssh://git@github.com/sunnysamantara/nix-secrets";
+    };
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs:

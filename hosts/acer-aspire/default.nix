@@ -1,4 +1,4 @@
-{ ... }:
+{ inputs, ... }:
 {
   hosts.acer-aspire = {
     # hostname defaults to the attribute name ("acer-aspire")
@@ -24,6 +24,7 @@
       "virt-manager"
       "openssh"
       "network-manager"
+      "yubikey"
     ];
 
     extra = [
@@ -36,6 +37,17 @@
         core.dotfileUser = "sunny";
         # Host-specific SDDM background for catppuccin.sddm.
         catppuccin.sddm.background = ./resources/itachi-sharingan.jpg;
+      }
+      {
+        sops = {
+          defaultSopsFile = inputs.nix-secrets + "/hosts/acer-aspire.yaml";
+          secrets."users/sunny" = { neededForUsers = true; };
+          secrets."u2f_keys" = {
+            mode = "0444";
+          };
+        };
+        users.mutableUsers = false;
+        users.users.root.hashedPassword = "!";
       }
     ];
   };
