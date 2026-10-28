@@ -25,6 +25,7 @@
       "openssh"
       "network-manager"
       "yubikey"
+      "omniroute"
     ];
 
     extra = [

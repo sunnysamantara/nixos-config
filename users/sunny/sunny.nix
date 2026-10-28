@@ -46,6 +46,11 @@
     sops = {
       age.keyFile = "/home/sunny/.config/sops/age/keys.txt";
       defaultSopsFile = inputs.nix-secrets + "/users/sunny.yaml";
+
+      # Gateway key for the local OmniRoute instance (services/omniroute.nix).
+      # Decrypted at home-manager activation, read by OpenCode at runtime via
+      # `{file:...}` — never inline the value (settings are a /nix/store file).
+      secrets.omniroute_api_key = { };
     };
   };
 }
