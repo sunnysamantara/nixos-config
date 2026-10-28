@@ -353,16 +353,14 @@ packaging, just the official OCI image under rootful podman.
 - `INITIAL_PASSWORD` is the dashboard password applied while none is saved in
   the DB (no onboarding wizard); after first start change it in the UI. It does
   not re-apply on later boots.
-- OpenCode side: `features/homeManager/opencode.nix` adds a **static**
+- OpenCode side: `features/homeManager/opencode.nix` adds a
   `provider.omniroute` (`npm = "@ai-sdk/openai-compatible"`, `name =
-  "OmniRoute"`, `baseURL = http://127.0.0.1:20128/v1`) with a curated list of
-  OmniRoute's virtual `auto/*` routing models (`auto`, `auto/best-coding`,
-  `auto/best-reasoning`, `auto/best-fast`, `auto/best-free`, `auto/coding`,
-  `auto/fast`, `auto/cheap`, `auto/smart`). The live catalogue is dynamic
-  (depends on providers configured in the dashboard) — dump exact ids with
-  `sudo podman exec omniroute omniroute setup-opencode --dry-run`, or use the
-  upstream `@omniroute/opencode-plugin` if you want live model discovery.
-  No default `model` is set; `/models` → `omniroute/auto` is the sane pick.
+  "OmniRoute"`, `baseURL = http://127.0.0.1:20128/v1`). Models are fetched
+  dynamically from OmniRoute's `/v1/models` endpoint at runtime (depends on
+  providers configured in the dashboard). The live catalogue can be inspected
+  via `curl` or with `sudo podman exec omniroute omniroute setup-opencode --dry-run`,
+  or use the upstream `@omniroute/opencode-plugin` if you want live model discovery
+  behavior. No default `model` is set; `/models` → `omniroute/auto` is the sane pick.
 - `options.apiKey` must stay `"{file:${config.sops.secrets.omniroute_api_key.path}}"`:
   `programs.opencode.settings` is rendered to a **world-readable** store file
   (`~/.config/opencode/opencode.json` → `/nix/store/…-opencode.json`), so
