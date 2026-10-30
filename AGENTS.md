@@ -61,10 +61,23 @@ never be both — listing a service under `features` (or a feature under
   `nixpkgs.config.allowUnfree = true` in `features/nixos/core.nix` (missing it
   used to make every `switch` fail on unfree `nvidia-x11` in pure eval).
 
-- Custom packages live under `pkgs/<name>/default.nix` and are exposed via
-  `overlays/default.nix` (applied to both `pkgs` and `stable-pkgs` in
-  `core/hosts.nix`), so consumers can use `pkgs.<name>`. AppImages use
+- Custom packages live under `pkgs/<name>/default.nix` and are **auto-discovered**
+  via `overlays/default.nix` (applied to both `pkgs` and `stable-pkgs` in
+  `core/hosts.nix`), so consumers can use `pkgs.<name>`. The overlay uses
+  `builtins.readDir ../pkgs` to find all package directories at eval time — every
+  `pkgs/<name>/default.nix` becomes `pkgs.<name>` with **zero registration**.
+  Just create the directory and file, `git add`, and it's live. AppImages use
   `appimageTools.wrapType2` for proper desktop entry/icon integration.
+  
+  **Adding a custom package:**
+  1. `mkdir pkgs/<name> && vim pkgs/<name>/default.nix` (write the derivation)
+  2. `git add pkgs/<name>` (untracked files are invisible to the flake)
+  3. `nix flake check` (verifies it evaluates)
+  4. Use as `pkgs.<name>` in any `_pkg.nix` / feature file
+  
+  No changes to `overlays/default.nix` needed. Package discovery is eval-time,
+  so a syntax error in one package breaks the entire overlay (fail fast). Only
+  place **directories** in `pkgs/` — files are treated as packages and will fail.
 - `scripts/sops-edit` — shell helper (not a Nix module; import-tree only picks
   up `.nix`) that opens a `secrets/` file with the matching **age key file**:
   `users/*` → `~/.config/sops/age/keys.txt`, `hosts/*`+`common.yaml` →
@@ -462,6 +475,158 @@ Rotation: re-`sops` the value (same key-file command), push,
 restart it — the unit is restarted on `switch` anyway). Changing
 `jwt_secret`/`api_key_secret` invalidates existing dashboard sessions and
 gateway keys.
+
+## Scaling
+
+The architecture supports growth via composable patterns. Here's how each layer scales:
+
+### Custom Packages (Auto-Discovery)
+
+`overlays/default.nix` uses `builtins.readDir ../pkgs` to auto-discover all
+`pkgs/<name>/default.nix` at eval time, so adding a package is a single file
+operation with **zero registration overhead**. At 20+ packages, there's no
+manual registry to maintain.
+
+**Pattern:** Use `callPackage` convention — your derivation receives only what
+it declares (`{ appimageTools, fetchurl, lib }:`), the rest is auto-injected:
+```nix
+# pkgs/my-tool/default.nix
+{ stdenv, fetchurl, autoPatchelfHook }:
+stdenv.mkDerivation {
+  pname = "my-tool";
+  version = "1.0.0";
+  src = fetchurl { url = "..."; sha256 = "..."; };
+  nativeBuildInputs = [ autoPatchelfHook ];
+}
+```
+
+Then `pkgs.my-tool` is immediately available everywhere (both `pkgs` and
+`stable-pkgs` have the overlay applied).
+
+### Role-Based Package Features
+
+Instead of duplicating common packages (`lshw`, `wget`, `btop`) across multiple
+host `_pkg.nix` files, create **role-based NixOS features**:
+
+```
+features/nixos/
+  packages-base.nix       # lshw, wget, btop — every machine
+  packages-desktop.nix    # brave, firefox, GUI tools
+  packages-server.nix     # monitoring, network diagnostics
+```
+
+Then hosts just list them:
+```nix
+# hosts/server-01/default.nix
+features = [ "packages-base" "packages-server" "openssh" ];
+```
+
+The per-host `_pkg.nix` shrinks to truly host-specific packages only (hardware
+tools, site-specific utilities).
+
+### User Templates
+
+At 3+ users with overlapping needs, extract common setup to a reusable feature:
+
+```nix
+# features/homeManager/user-standard.nix
+{ ... }:
+{
+  flake.modules.homeManager.user-standard = { pkgs, ... }: {
+    home.packages = with pkgs; [ htop curl git fzf ];
+    programs.zsh.enable = true;
+    # common shell config, aliases, etc.
+  };
+}
+```
+
+Then each user imports it and adds only their deltas:
+```nix
+# users/alice/alice.nix
+imports = [ ./_pkg.nix ../../features/homeManager/user-standard.nix ];
+# _pkg.nix now contains only Alice-specific packages
+```
+
+### Multi-Architecture
+
+`core/hosts.nix` parameterizes `host.system`, and the overlay flows through
+`callPackage`, so `aarch64-linux`/`aarch64-darwin` hosts work by just setting
+`system = "aarch64-linux"` in the host definition. External flake inputs that
+use `inputs.nixpkgs.follows = "nixpkgs"` share the same nixpkgs instance, so
+cross-platform "just works" as long as upstream packages support the platform.
+
+Example:
+```nix
+# hosts/rpi-01/default.nix
+{
+  hosts.rpi-01 = {
+    system = "aarch64-linux";
+    users = [ "sunny" ];
+    features = [ "packages-base" ];
+    # ...
+  };
+}
+```
+
+### Many Flake Inputs
+
+At 20+ external inputs, `flake.nix` can get unwieldy. Strategies:
+
+- **Use `follows` aggressively** to share nixpkgs (reduces closures, avoids
+  duplicate builds). Already done for `delta`:
+  ```nix
+  inputs.delta = {
+    url = "github:zed-industries/delta-nix";
+    inputs.nixpkgs.follows = "nixpkgs";
+  };
+  ```
+
+- **Document by category** with comments (already partially done in `flake.nix`)
+
+- **Pin to stable versions** for production hosts (use specific commits/tags
+  instead of tracking `main`)
+
+### Invariants to Maintain at Scale
+
+Keep these patterns intact as the repo grows:
+
+1. **`git add` before eval** — the flake ignores untracked files; this is the
+   #1 "why doesn't it work?" cause. Use `git add -N` (intent-to-add) if you
+   don't want to stage content yet.
+
+2. **`_`-prefixed files are never auto-imported** — always explicitly import
+   them via `extra = [ ./_pkg.nix ]` (hosts) or `imports = [ ./_pkg.nix ]`
+   (users).
+
+3. **Outer function = flake-parts args only** (`config`, `inputs`, `lib`);
+   **inner function = module args** (`pkgs`, `inputs`, `stable-pkgs`, etc.).
+   See `features/homeManager/delta.nix` for the canonical pattern.
+
+4. **Features and services are disjoint namespaces** — a name can exist in
+   `flake.modules.nixos` OR `flake.services`, never both. `core/hosts.nix`
+   enforces this with separate resolvers that throw readable errors on collision.
+
+5. **One overlay, one `core/hosts.nix`** — these are the composition chokepoints.
+   Keep them clean and generic. Host-specific logic lives in host files, not in
+   shared infrastructure.
+
+## Quick Reference
+
+| I want to... | Do this |
+|--------------|---------|
+| Install a nixpkgs package for one user | Add to `users/<user>/_pkg.nix` → `home.packages = [ pkgs.X ];` |
+| Install a nixpkgs package system-wide on one host | Add to `hosts/<host>/_pkg.nix` → `environment.systemPackages = [ pkgs.X ];` |
+| Install a nixpkgs package on every host | Create a feature in `features/nixos/packages-*.nix` or add to `core` base feature |
+| Use a stable version instead of latest | `stable-pkgs.X` instead of `pkgs.X` |
+| Package an AppImage/binary not in nixpkgs | `pkgs/<name>/default.nix` (auto-discovered, no overlay edit needed) |
+| Use an external project's flake | Add to `inputs` in `flake.nix` + create feature file + user/host imports it |
+| Run a container service | `services/<name>.nix` with `virtualisation.oci-containers` (see `omniroute.nix`) |
+| Enable a NixOS service (non-container) | `services/<name>.nix` registering `flake.services.<name>` (see `openssh.nix`) |
+| Create a reusable NixOS feature | `features/nixos/<name>.nix` registering `flake.modules.nixos.<name>` |
+| Create a reusable home-manager feature | `features/homeManager/<name>.nix` registering `flake.modules.homeManager.<name>` |
+| Override a package | In the overlay: `<name> = prev.<name>.overrideAttrs (old: { ... });` |
+| Add secrets for a user | Edit `secrets/users/<user>.yaml` with `scripts/sops-edit`, declare in user's `.nix` |
+| Add secrets for a host | Edit `secrets/hosts/<host>.yaml` with `scripts/sops-edit`, declare in host's `extra` or service |
 
 ## Gotchas
 - Untracked `.nix` files are NOT part of the flake source: run `git add` (even
