@@ -1,10 +1,10 @@
-{ pkgs, ... }:
+{ pkgs, stable-pkgs, ... }:
 {
 
   environment.systemPackages = [
     pkgs.bitwarden-desktop # unstable (nixos-unstable)
     pkgs.superfile
-    pkgs.brave
+    stable-pkgs.brave
     pkgs.wget
     pkgs.lshw
     pkgs.libheif

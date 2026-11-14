@@ -1,7 +1,7 @@
 { ... }:
 {
   flake.services.audio = { pkgs, ... }: {
-    environment.systemPackages = [ pkgs.qpwgraph ];
+    environment.systemPackages = [ pkgs.qpwgraph pkgs.pipewire.jack ];
 
     services.pulseaudio.enable = false;
     security.rtkit.enable = true; # realtime kit, used by PipeWire
@@ -10,7 +10,6 @@
       alsa.enable = true;
       alsa.support32Bit = true;
       pulse.enable = true;
-      jack.enable = true;
     };
   };
 }

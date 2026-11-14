@@ -11,5 +11,6 @@
     pkgs.scrcpy
     pkgs.libreoffice-qt
     pkgs.gimp-with-plugins
+    pkgs.notion-electron
   ];
 }

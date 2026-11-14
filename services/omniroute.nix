@@ -16,7 +16,7 @@
       backend = "podman";
       containers.omniroute = {
         # Pin an immutable SemVer tag; bump deliberately (see AGENTS.md).
-        image = "docker.io/diegosouzapw/omniroute:3.8.52";
+        image = "docker.io/diegosouzapw/omniroute:3.8.53";
 
         ports = [ "127.0.0.1:20128:20128" ];
 

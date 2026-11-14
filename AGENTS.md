@@ -13,7 +13,8 @@ never be both — listing a service under `features` (or a feature under
 - Evaluate everything: `nix flake check` (no test suite; this is it)
 - Build a host: `nixos-rebuild build --flake .#<host>` (or `.#<host>` on the machine)
 - Apply: `sudo nixos-rebuild switch --flake .#<host>`
-- Update inputs: `nix flake update`
+- Update inputs: `nix flake update` (automatically pulls latest secrets from `main` branch)
+- Update only secrets: `nix flake update nix-secrets`
 - Some packages may still need: `NIXPKGS_ALLOW_INSECURE=1` (e.g. `NIXPKGS_ALLOW_INSECURE=1 sudo -E nixos-rebuild switch --flake . --impure`).
   Unfree does NOT need an env var any more: `nixpkgs.config.allowUnfree = true`
   is set in the base feature (`features/nixos/core.nix`), so plain
@@ -96,8 +97,9 @@ never be both — listing a service under `features` (or a feature under
   `git@github.com:sunnysamantara/nix-secrets.git`) nested inside the main flake
   repo. It is a git submodule (the editing working copy). Eval does NOT read
   it from the working tree — the flake input is the GitHub repo itself:
-  `inputs.nix-secrets.url = "git+ssh://git@github.com/sunnysamantara/nix-secrets"`,
-  locked by rev in `flake.lock`.
+  `inputs.nix-secrets.url = "git+ssh://git@github.com/sunnysamantara/nix-secrets?ref=main"`,
+  locked by rev in `flake.lock`. The `?ref=main` makes `nix flake update`
+  automatically pull the latest commit from the main branch.
 - **Hard rule: NEVER push any code to the secrets repo.** Only encrypted
   secret files (`.yaml`, `.json`, etc. encrypted with sops) are allowed.
   No source code, no configuration files, no plaintext files.
@@ -169,8 +171,9 @@ never be both — listing a service under `features` (or a feature under
      `SOPS_AGE_KEY_FILE=<key> nix-shell -p sops --run "sops <file>"`
      from inside `secrets/`.
   3. Commit and push to the private repo.
-  4. In the main repo: `nix flake update nix-secrets` (relocks the input to
-     the pushed rev — eval uses the GitHub repo, NOT the local working tree).
+  4. In the main repo: `nix flake update` (pulls latest from all inputs including
+     secrets; or `nix flake update nix-secrets` to update only secrets — eval
+     uses the GitHub repo, NOT the local working tree).
   5. Commit the updated `flake.lock` and rebuild/deploy the affected host(s).
 - **YubiKey setup:** `age-plugin-yubikey` generates the age identity on the
   YubiKey. The public key is added to ALL creation rules in `.sops.yaml`.
@@ -237,12 +240,18 @@ never be both — listing a service under `features` (or a feature under
   **feature-local** `import inputs.nixpkgs { overlays = [ inputs.obsidian-extensions.overlays.default ]; }`
   — no global overlay), `opencode` (`programs.opencode` minimal: enable +
   `extraPackages` ripgrep/fd/fzf; NO `model` set so you pick one via `/models`;
+  `home.packages` also carries `pkgs.opencode-desktop` (nixpkgs Electron client,
+  same 2.0.32 as `pkgs.opencode`, which it bundles as its sidecar and stages into
+  `~/.local/share/opencode-desktop/cli/`; a packaged build reads the real
+  `~/.config/opencode/opencode.json`, so the omniroute provider and the
+  `{file:...}` sops key apply to both) plus `fd`/`fzf`, because `extraPackages`
+  only extend the CLI wrapper's PATH, not the Electron app's session PATH;
   OpenCode 2 theme is owned by the `catppuccin` feature: `catppuccin.opencode`
   is disabled (it only writes the old `tui.theme`) and `programs.opencode.cli.theme`
   is set to `{ name = "catppuccin"; mode = "dark"; }`; also registers the
   self-hosted OmniRoute gateway as a static `provider.omniroute`
   (`npm = "@ai-sdk/openai-compatible"`, `baseURL =
-  http://127.0.0.1:20128/v1`, curated `auto/*` models) whose
+  http://127.0.0.1:20128/v1`, curated `kr/*` + `agy/*` models) whose
   `options.apiKey = "{file:${config.sops.secrets.omniroute_api_key.path}}"` is
   resolved at runtime — see the OmniRoute section), `devenv` (`programs.direnv`
   + `nix-direnv` + `programs.devenv`; import-only like the simple features),
@@ -441,7 +450,7 @@ are missing.
   not this working tree:
   ```
   cd /home/sunny/homeserver/secrets && git add -A && git commit -m "omniroute secrets" && git push
-  cd /home/sunny/homeserver && nix flake update nix-secrets && git add flake.lock
+  cd /home/sunny/homeserver && nix flake update && git add flake.lock
   git add services/omniroute.nix scripts/sops-edit && nix flake check
   sudo nixos-rebuild switch --flake .#acer-aspire
   sudo systemctl status podman-omniroute.service
@@ -459,18 +468,20 @@ are missing.
   cd /home/sunny/homeserver
   scripts/sops-edit users/sunny.yaml   # omniroute_api_key: sk-…
   cd secrets && git add -A && git commit -m "omniroute gateway key" && git push
-  cd /home/sunny/homeserver && nix flake update nix-secrets
+  cd /home/sunny/homeserver && nix flake update
   sudo nixos-rebuild switch --flake .#acer-aspire
   ```
   HM activation writes `~/.config/sops-nix/secrets/omniroute_api_key` (0400).
 - [ ] **6. Verify OpenCode**: `opencode models | grep '^omniroute/'` lists the
-  curated models at least; `opencode` → `/models` → `omniroute/auto`; ask a
-  question and check `sudo podman logs --tail 20 omniroute` shows the request.
+  curated models at least; `opencode` → `/models` → `omniroute/kr/claude-sonnet-4.5`;
+  ask a question and check `sudo podman logs --tail 20 omniroute` shows the request.
+  The same `~/.config/opencode/opencode.json` is read by `opencode-desktop`
+  (`pkgs.opencode-desktop`), so the provider shows up in the GUI too.
   Optional: regenerate the exact catalogue into the static list —
   `sudo podman exec omniroute omniroute setup-opencode --dry-run` prints the JSON.
 
 Rotation: re-`sops` the value (same key-file command), push,
-`nix flake update nix-secrets`, `switch`
+`nix flake update`, `switch`
 (`sudo systemctl restart podman-omniroute` if the env-file change alone does not
 restart it — the unit is restarted on `switch` anyway). Changing
 `jwt_secret`/`api_key_secret` invalidates existing dashboard sessions and

@@ -26,6 +26,7 @@
       qtmultimedia
       ktorrent
       qtsvg
+      kfind
       pkgs.haruna
     ];
 
