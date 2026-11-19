@@ -67,8 +67,18 @@ never be both — listing a service under `features` (or a feature under
   `core/hosts.nix`), so consumers can use `pkgs.<name>`. The overlay uses
   `builtins.readDir ../pkgs` to find all package directories at eval time — every
   `pkgs/<name>/default.nix` becomes `pkgs.<name>` with **zero registration**.
-  Just create the directory and file, `git add`, and it's live. AppImages use
-  `appimageTools.wrapType2` for proper desktop entry/icon integration.
+  Just create the directory and file, `git add`, and it's live.
+
+  **AppImages**: `appimageTools.wrapType2` (what `pkgs/photocraft` does) builds an
+  FHS chroot that exposes *only* `AppRun` → the GUI, installs no `.desktop`/icon
+  of its own (that "proper desktop entry/icon integration" claim was wrong:
+  photocraft's output is just `bin/photocraft`), and drags in a ~1.5 GiB
+  closure. When the AppImage ships several programs or you want a menu entry,
+  extract it instead: `appimageTools.extract` (`extractType2` is deprecated) +
+  `stdenv.mkDerivation` + `autoPatchelfHook`, with the `dlopen()`ed window libs
+  in `runtimeDependencies` (RPATH) and the actually-linked ones in
+  `buildInputs`. `pkgs/misterdownloadmanager` is the reference: four binaries
+  installed unmodified from one AppImage in 42 MiB.
   
   **Adding a custom package:**
   1. `mkdir pkgs/<name> && vim pkgs/<name>/default.nix` (write the derivation)
@@ -188,7 +198,7 @@ never be both — listing a service under `features` (or a feature under
 - Host key is `hosts.<attr>`, NOT the directory name: `hosts/skullsaints/default.nix`
   defines `hosts.skullsaint` → `.#skullsaint`.
 - `acer-aspire` (x86_64-linux): features sddm-sword (qylock, inert — see under
-  Catppuccin below), kde, kdeconnect, catppuccin, solaar; services audio,
+  Catppuccin below), kde, kdeconnect, catppuccin, solaar, konveyor; services audio,
   bluetooth, nvidia (Intel+NVIDIA prime sync; bus IDs are hardware-specific),
   sddm, virt-manager, openssh, network-manager, yubikey, omniroute. Evaluates. Its `extra` overrides
   `catppuccin.sddm.background` with
@@ -253,7 +263,22 @@ never be both — listing a service under `features` (or a feature under
   (`npm = "@ai-sdk/openai-compatible"`, `baseURL =
   http://127.0.0.1:20128/v1`, curated `kr/*` + `agy/*` models) whose
   `options.apiKey = "{file:${config.sops.secrets.omniroute_api_key.path}}"` is
-  resolved at runtime — see the OmniRoute section), `devenv` (`programs.direnv`
+  resolved at runtime — see the OmniRoute section; the feature also sets
+  `programs.opencode.enableMcpIntegration = true`, which merges every
+  `programs.mcp.servers.*` entry into OpenCode's own `mcp` settings — without it
+  an MCP server is defined but never handed over), `misterdownloadmanager`
+  (`features/homeManager/misterdownloadmanager.nix`; Mister Download Manager as
+  *the* downloader — `pkgs.misterdownloadmanager` (upstream prebuilt AppImage,
+  unpacked so all four of its programs survive: `misterdownloadmanager`,
+  `-cli`, `-mcp`, `-nmhost`) + helpers `_7zz`/`ffmpeg`/`yt-dlp`/`gallery-dl` in
+  `home.packages`, magnet links and `.torrent` files default to it via
+  `xdg.mimeApps`, browser native-messaging manifests are written by
+  **activation as real copies** (not `home.file` symlinks — see Gotchas) for
+  Firefox, Chromium, Brave and Helium, `<data dir>/tools/programs.json` points
+  MDM at the store `yt-dlp`/`gallery-dl`, and
+  `programs.mcp.servers.misterdownloadmanager` + the opencode
+  `enableMcpIntegration` above give agents `mcp.misterdownloadmanager`),
+  `devenv` (`programs.direnv`
   + `nix-direnv` + `programs.devenv`; import-only like the simple features),
   `profile-picture` (option
   `profile.picture` (path, default null) → `~/.face` + `~/.face.icon`; the
@@ -265,12 +290,23 @@ never be both — listing a service under `features` (or a feature under
   `.config/autostart/nixdatifier.desktop` running `nixdatifier --background`;
   widget/tray icon colours and all other settings are configured via the widget's
   own right-click → Configure / the app UI, not declaratively; pulled in by
-  `kde-all`, so KDE users get it without a separate import).
+  `kde-all`, so KDE users get it without a separate import), `konveyor`
+  (`features/homeManager/konveyor.nix`; thin adapter importing
+  `inputs.konveyor.homeManagerModules.default`. The fork module owns the user
+  side: widget/plasmoid symlinks, two user services, KCM + D-Bus/desktop entries,
+  one-time config seeding and optional shortcut/KWin management. It follows the
+  NixOS side's `programs.konveyor.enableWidgets`, so hosts without Konveyor are
+  unaffected — see the dedicated Konveyor section).
 - homeManager `kde/` family (dir features/homeManager/kde): `kde` (core — imports
   `inputs.plasma-manager.homeModules.plasma-manager`, plasma.enable), `kde-desktop`
   (panels/systray; `systemTray.items.hidden = [ "indicator-solaar" ]` keeps the
   Solaar StatusNotifier icon in the popup, not the bar — unmatched id when
-  solaar is off, otherwise it keeps the icon out of the bar), `kde-workspace` (theming pkgs: catppuccin-kde/gtk, papirus,
+  solaar is off, otherwise it keeps the icon out of the bar. When the NixOS
+  `konveyor` feature is enabled it also swaps the bottom-panel widgets from
+  `kickoff`/`icontasks` to Konveyor's `org.devl0rd.portal.launcher`/`org.devl0rd.taskbar`
+  and adds the three `org.devl0rd.*.overlay` hosts as hidden system-tray items;
+  hosts without konveyor keep the stock Plasma widgets — gated by
+  `osConfig.programs.konveyor.enableWidgets or false`), `kde-workspace` (theming pkgs: catppuccin-kde/gtk, papirus,
   graphite-cursors; look&feel, keyboard layout in/eng via
   `programs.plasma.input.keyboard`), `kde-kwin` (effects/titlebar/shortcuts +
   `inputs.kwin-effects-better-blur-dx` pkg), `kde-power` (powerdevil),
@@ -310,7 +346,11 @@ never be both — listing a service under `features` (or a feature under
   extraSettings; keyboard layout lives in the HM `kde-workspace` feature),
   `disko` (import-only: imports `inputs.disko.nixosModules.disko` so a host's
   `extra` can carry `disko.devices.*`; enabled on skullsaint only — hosts
-  without a disko config get no effect from it).
+  without a disko config get no effect from it), `konveyor` (`features/nixos/konveyor.nix`;
+  thin adapter importing `inputs.konveyor.nixosModules.default` and setting
+  `programs.konveyor.enable = true`; acer-aspire only. The fork module installs
+  the plugin/KCM/QML and exports the env the effect needs. `kde-desktop` gates on
+  `osConfig.programs.konveyor.enableWidgets`; see the dedicated Konveyor section).
 - services (nixos, `flake.services.<name>`), all moved out of `features/nixos/`:
   `boot` (base service: GRUB/EFI loader with OS-prober, `configurationLimit 10`,
   `default = "saved"`, systemd-boot disabled; every host via `baseServices`),
@@ -487,6 +527,177 @@ restart it — the unit is restarted on `switch` anyway). Changing
 `jwt_secret`/`api_key_secret` invalidates existing dashboard sessions and
 gateway keys.
 
+## Mister Download Manager (MDM)
+`pkgs/misterdownloadmanager` (the upstream prebuilt AppImage, unpacked) plus
+`features/homeManager/misterdownloadmanager.nix` (imported by `sunny`). Makes
+MDM *the* downloader: menu entry + icon, default handler for `magnet:` links and
+`.torrent` files, browser capture through the native-messaging host, and a
+`misterdownloadmanager-mcp` server for OpenCode.
+
+Manual steps (once, only you can do them):
+- [ ] **Install the browser extension.** Firefox → addons.mozilla.org →
+  "Mister Download Manager". The manifests are already in place (the feature
+  writes them, and the app refreshes them at every start), but without the
+  extension nothing is captured, so MDM is only "the default downloader" for
+  links nothing else hands it.
+- [ ] **Turn on the automation API** with the app running:
+  `misterdownloadmanager-cli api on` (or the Options switch). Needed by the MCP
+  server's list/pause/resume/remove tools; `add_download` works without it.
+  Saved per user, survives restarts.
+- [ ] One test download, then a magnet link from the browser.
+
+Verify:
+```bash
+which misterdownloadmanager{,-cli,-mcp,-nmhost}
+xdg-mime query default x-scheme-handler/magnet     # misterdownloadmanager.desktop
+xdg-mime query default application/x-bittorrent    # misterdownloadmanager.desktop
+cat ~/.local/share/misterdownloadmanager/tools/programs.json   # store yt-dlp/gallery-dl
+opencode mcp list 2>/dev/null || jq .mcp ~/.config/opencode/opencode.json
+```
+
+Notes:
+- The GUI needs no FHS sandbox: the binaries link only libc/libm/libgcc_s, the
+  window stack is `dlopen()`ed onto the RPATH that `runtimeDependencies` sets.
+- An earlier version of the app's own `yt-dlp` download may still sit in
+  `~/.local/share/misterdownloadmanager/tools/yt-dlp/<version>/` (~40 MB, unused
+  while `programs.json` names the store copy) — safe to delete.
+- Helpers follow `nix flake update` (yt-dlp changes often, so expect to re-lock
+  when video sites break). MDM can also update its own copies if you remove the
+  `programs.json` activation entry.
+
+## Konveyor (KWin tiling + Plasma workspace overlay)
+Konveyor (forked from https://github.com/DevL0rd/Konveyor to
+https://github.com/sunnysamantara/Konveyor) is a KWin tiling effect plus a large
+set of Plasma widgets (system/process/router monitors, logs, an app portal, a
+taskbar, screen rotation) and a "Kontrol Panel". **acer-aspire only** — the
+implementation now lives in the fork's `nix` branch, pinned in `flake.lock` at
+`6b2b8e4`. This repo keeps only thin adapters: `features/nixos/konveyor.nix`
+imports `inputs.konveyor.nixosModules.default`, and
+`features/homeManager/konveyor.nix` imports
+`inputs.konveyor.homeManagerModules.default`. The input follows this flake's
+`nixpkgs`, `home-manager` and `plasma-manager`, so there is one Plasma-manager
+module set. `nix flake update konveyor` moves the package, modules and plugin ids
+together; `skullsaint` has neither adapter enabled.
+
+### Packaging (fork's `nix` branch, `pkg/default.nix`)
+- The fork builds from its own source tree (`self`), with deterministic plugin
+  ids derived from `self.rev` (currently `6b2b8e4`), and fetches the
+  `Plasma-Shared` submodule from GitHub itself. `postInstall` now makes the staged
+  widget copy writable **before** copying Plasma-Shared and copies its contents
+  (not the directory) into `shared/common`; `passthru` exports
+  `pluginId`/`telemetryPluginId` directly instead of reading `$out` at eval time.
+  The old `features/_konveyor-package.nix` shim that patched both has been
+  removed. `kwinrc.Plugins` enables the versioned ids and disables the
+  unversioned upstream ids so a stale ABI-mismatched `.so` cannot load.
+- The fork's `postInstall` replicates upstream `widgets/install.sh`'s staging
+  (shared QML/JS into each plasmoid, panel UI into the small plasmoids, portal
+  launcher split out) entirely in the store. It uses `cp -RL` because NAR-optimised
+  store files are hardlinked (`cp -a` broke staging) and `chmod -R u+w` because the
+  store is read-only. The desktop-widget hider is a copy of the exact
+  `kdePackages.plasma-desktop` `org.kde.desktopcontainment` with the upstream
+  `desktopcontainment.patch` applied. Collector Python scripts are pinned via
+  `postFixup` `patchShebangs --build` to a store `python3` with `nvidia-ml-py` +
+  `dbus-python` (the auto hook uses `HOST_PATH` under `strictDeps` and misses them).
+- The fork's generic modules are now the implementation. NixOS defaults:
+  `managePlasma = false` (Plasma stays owned by the `kde` feature) and
+  `manageEnvironmentFile = true`. Home Manager defaults are UI-friendly:
+  `manageConfig = false` (seed once, then user-owned), `manageShortcuts = false`,
+  panel layout unmanaged, `manageKwinPlugin = true`. See the fork's `NIX.md`.
+- The NixOS module exports `QT_PLUGIN_PATH`/`QML_IMPORT_PATH`/`QML2_IMPORT_PATH`
+  and `QML_XHR_ALLOW_FILE_READ=1` to the session (repeated in both user units) —
+  without these KWin/KCM cannot see the plugin/QML or read the collectors' JSON.
+
+### User-side wiring
+- `~/.config/konveyor/config.kdl` is **seeded once from the fork's shipped
+  default** and then left to the user/Konveyor UI (`manageConfig = false`).
+  The old local `Mod+K → Mod+Shift+P` rewrite is gone: change the cheatsheet
+  bind from Konveyor's UI if it collides with KDE's `launch-konsole`. Set
+  `programs.konveyor.manageConfig = true` in the fork module only if you want
+  Nix to own the file. Validate with
+  `konveyor validate -c ~/.config/konveyor/config.kdl`.
+- Shortcuts are **not** managed by default (`manageShortcuts = false`); KDE's
+  Shortcuts UI is authoritative. The fork module can still clear Plasma's
+  `activate application launcher` and KWin's `Grid View`, and bind the Kontrol
+  Panel toggle/Games page, when `manageShortcuts = true`.
+- Two Home Manager user units (section-style `Unit`/`Service`/`Install`):
+  `konveyor-widgets.service` (collectors, `Restart=always`, `Nice=19`,
+  `WantedBy=default.target`) and `konveyor-kontrol-panel.service` (`Type=dbus`,
+  `BusName=org.devl0rd.KontrolPanel`, `WantedBy=graphical-session.target`).
+- ~20 plasmoids symlinked from the store into `~/.local/share/plasma/plasmoids/`
+  (ids read from each `metadata.json`), helper commands into `~/.local/bin`
+  (`sysmon-collect`, `procmon-collect`, `routermon-{collect,ctl,config,speedtest}`,
+  `logmon-collect`, `portal-{games,packages,launcher,friends}`, `monitor-overlay`,
+  `linux-plasma-screen-rotate`), plus D-Bus/desktop entries and a
+  `kbuildsycoca6` activation so `Meta+G` works immediately. Helper packages `jq`,
+  `glib` (gdbus), `kdePackages.libkscreen`, `openssh`, `curl`, `iputils` are in
+  `home.packages`.
+- `kde-desktop`'s bottom panel switches from `kickoff`/`icontasks` to
+  `org.devl0rd.portal.launcher`/`org.devl0rd.taskbar`, and the three
+  `org.devl0rd.{sysmon,procmon,routermon}.overlay` hosts are hidden system-tray
+  items (see the kde-desktop bullet).
+
+### Mutable seeds (not sops-backed yet)
+Activation creates these once only if absent; they are then owned by the widget
+settings UI, never symlinked into the read-only store:
+- `~/.config/Linux-System-Monitor/config.json` and
+  `~/.config/Linux-Process-Mon/config.json` (0644, upstream examples).
+- `~/.config/Linux-Router-Monitor/config.json` (0600) — router host/user/SSH key
+  + AdGuard details; seeded with empty credentials and AdGuard disabled.
+- `~/.config/Plasma-App-Portal/config.json` (0600) — empty `steam_api_key`.
+- `~/.config/konveyor/kontrolpanelrc` (opens on the shortcuts page) and
+  `~/.config/konveyor/taskbarrc` (0644).
+
+Manual steps (once, only you can do them):
+- [ ] Apply and relogin/restart Plasma so KWin loads the plugin and the session
+      picks up `QT_PLUGIN_PATH`/`QML_*`: `sudo nixos-rebuild switch --flake .#acer-aspire`.
+- [ ] Populate `~/.config/Linux-Router-Monitor/config.json` with your router
+      host/user/SSH key (and AdGuard URL/token if wanted), then enable AdGuard in
+      the widget.
+- [ ] Put a Steam Web API key in `~/.config/Plasma-App-Portal/config.json`
+      (`steam_api_key`) for the friends/games portal.
+- [ ] If the effect is off, enable it in System Settings → Window Management →
+      KWin Effects ("Konveyor"); the `kwinrc` plugin keys should do this already.
+
+Verify:
+```bash
+systemctl --user status konveyor-widgets konveyor-kontrol-panel
+ls ~/.local/share/plasma/plasmoids | grep -c org.devl0rd        # ~20
+ls ~/.local/bin | grep -E 'sysmon|procmon|routermon|logmon|portal-|monitor-overlay'
+konveyor validate -c ~/.config/konveyor/config.kdl
+# Shortcuts are user-managed by default (manageShortcuts = false): no forced `none,,` clears
+```
+
+### Diagnosis: "Konveyor stopped working after restart" (2026-11-18)
+The NixOS half (package, `QT_PLUGIN_PATH`, `kwinrc` plugin keys) was live, but
+none of the home-manager half existed — no `config.kdl`, no plasmoids, no
+helpers, no user units. `home-manager-sunny.service` was failing in
+`checkLinkTargets`: the flake declared only MDM's two MIME defaults while the
+user's hand-maintained `~/.config/mimeapps.list` and
+`~/.local/share/applications/mimeapps.list` held the full desktop association
+set. Home Manager aborts the *entire* activation on a clobbered file, so
+everything after `checkLinkTargets` was skipped (it had been failing silently
+since 2026-10-10). Fix: `features/homeManager/misterdownloadmanager.nix` now
+declares a superset — all existing associations plus the MDM defaults — and sets
+`force = true` on both `xdg.configFile."mimeapps.list"` and
+`xdg.dataFile."applications/mimeapps.list"`. Diagnose with
+`journalctl -u home-manager-sunny.service | grep checkLinkTargets`.
+
+When shortcut management is enabled (`manageShortcuts = true`), the clears in
+`kglobalshortcutsrc` are written with `immutable = true` (which plasma-manager
+renders as `key[$i]=…`) through `configFile`, not `programs.plasma.shortcuts`:
+KGlobalAccel rewrites that file from its in-memory action registry on
+logout/relogin and otherwise restores `Meta+G` / `Meta+Alt+F1`, colliding with
+Konveyor's Games page and Kontrol Panel toggle. With management on, expect
+`Grid View=none,,`, `activate application launcher=none,,` and
+`toggle=Meta\tAlt+F1,,`. By default (`manageShortcuts = false`) these lines stay
+user-owned.
+
+Workaround when `sudo nixos-rebuild switch` cannot be run interactively: the
+home-manager half can be activated directly as the user from a built generation
+with `/nix/store/…/hm-setup-env /nix/store/…/home-manager-generation`. The NixOS
+module calls it with `--driver-version 1`, so this deliberately does not update
+the HM profile — a real `switch` and a Plasma relogin are still required.
+
 ## Scaling
 
 The architecture supports growth via composable patterns. Here's how each layer scales:
@@ -638,6 +849,7 @@ Keep these patterns intact as the repo grows:
 | Override a package | In the overlay: `<name> = prev.<name>.overrideAttrs (old: { ... });` |
 | Add secrets for a user | Edit `secrets/users/<user>.yaml` with `scripts/sops-edit`, declare in user's `.nix` |
 | Add secrets for a host | Edit `secrets/hosts/<host>.yaml` with `scripts/sops-edit`, declare in host's `extra` or service |
+| Enable Konveyor (KWin tiling + widgets) | Add `konveyor` to a host's `features` and the user's HM `imports` (thin adapters over the fork's modules); `config.kdl`/shortcuts are user-owned by default, widget `config.json` files are one-time seeds |
 
 ## Gotchas
 - Untracked `.nix` files are NOT part of the flake source: run `git add` (even
@@ -692,6 +904,59 @@ Keep these patterns intact as the repo grows:
   decrypted at boot via `neededForUsers = true` and set as
   `users.users.root.hashedPasswordFile`. Hosts without a root password
   explicitly lock root with `users.users.root.hashedPassword = "!"`.
+- **Mister Download Manager is not PATH-driven for every helper.** It looks up
+  `ffmpeg` and 7-Zip (`7zz`, then `7z`, `7za`) on PATH
+  (`crates/tools/src/ffmpeg.rs`, `crates/extract/src/external.rs`), but `yt-dlp`
+  and `gallery-dl` it takes *only* from its own download folder
+  (`<data dir>/tools/<helper>/<version>/current.json`) or from
+  `<data dir>/tools/programs.json` — the "your own copy" file its Helpers window
+  writes (`crates/tools/src/chosen.rs`). Putting them on PATH alone does
+  nothing: `misterdownloadmanager-cli gallery-get …` still answers
+  "gallery-dl is not installed". The feature therefore writes `programs.json`
+  at activation with the store paths (so nothing is self-downloaded and
+  `nix flake update` moves the helpers); deleting that file, or picking another
+  copy in Helpers…, hands them back to MDM. `data dir` is `$XDG_DATA_HOME` or
+  `~/.local/share`, ending in `misterdownloadmanager`.
+- **MDM re-registers the browser manifests on every start**
+  (`<store>/bin/misterdownloadmanager-nmhost --register`), rewriting
+  `~/.mozilla/native-messaging-hosts/` plus every Chromium-family
+  `~/.config/<browser>/NativeMessagingHosts/` whose directory exists. Hence they
+  are activation-written *copies*, never `home.file` symlinks: a symlink into
+  the read-only store makes that registration fail with
+  `Read-only file system (os error 30)` and the app reports "browser integration
+  not set up" (only the other browsers get registered). The content is
+  identical either way — the app's own registration points at its resolved store
+  path, not `/usr/bin`.
+- **MDM's "Check for updates" is not the upgrade path.** It detects a
+  package-manager install and tells you to update there ("You have version …,
+  from your system's package manager"); if it ever does try to replace itself it
+  cannot, the binary is in `/nix/store`. Bump `version` + the `fetchurl` hash in
+  `pkgs/misterdownloadmanager/default.nix` instead. Also expect
+  `OpenPGP`-verified self-installs (`install-ytdlp`, `install-gallery-dl`) to be
+  pointless while `programs.json` names the store copies.
+- **The MDM MCP server needs the app's automation API**, which is off by
+  default and persisted per user: with the app running, run
+  `misterdownloadmanager-cli api on` once (or use the Options switch). Until
+  then `list_downloads`/`pause_downloads`/… reply that it is off, while
+  `add_download` works. `programs.mcp` + opencode's `enableMcpIntegration` are
+  what put `mcp.misterdownloadmanager` in `~/.config/opencode/opencode.json`.
+- ffmpeg is 9.0.2 in unstable (the MDM feature pulls it in for video merges); if
+  a merge step ever rejects an option, swap `ffmpeg` for `ffmpeg_7` in
+  `features/homeManager/misterdownloadmanager.nix`.
+- **Konveyor splits Nix-owned and user-owned config.** Only `kwinrc` plugin keys
+  are Nix-owned every `switch` (from the fork's NixOS module,
+  `manageKwinPlugin = true`), so the versioned `konveyor_effect_*/process_monitor_*`
+  ids stay correct. `~/.config/konveyor/config.kdl` and the Plasma shortcuts are
+  user-owned by default (`manageConfig`/`manageShortcuts = false`), so GUI edits
+  survive `switch`; set those fork-module options to `true` only if you want Nix
+  to own them. The four widget `config.json` files are seeded once *only if
+  absent* and then user-owned (credentials survive `switch`); they are not
+  sops-backed, so back them up yourself.
+- **Staging store files in a derivation: `cp -RL`, not `cp -a`.** NAR-optimised
+  store files are hardlinked, so `cp -a` preserves shared inodes and a later
+  in-place `cp` corrupts sibling files. `chmod -R u+w` the copy before rearranging
+  it, and use `patchShebangs --build` under `strictDeps` (the auto hook resolves
+  against `HOST_PATH` and misses `nativeBuildInputs`). See `pkgs/konveyor/default.nix`.
 
 ## NixOS best practices (this repo)
 - Compose, don't override: `allowUnfree`, `useGlobalPkgs`/`useUserPackages`,

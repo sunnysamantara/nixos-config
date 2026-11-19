@@ -164,6 +164,33 @@
         "type": "github"
       }
     },
+    "konveyor": {
+      "inputs": {
+        "home-manager": [
+          "home-manager"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "plasma-manager": [
+          "plasma-manager"
+        ]
+      },
+      "locked": {
+        "lastModified": 1794987508,
+        "narHash": "sha256-Va1qnwuAoeV02Iq9Q93pBktGz+C2u0euKj4OL3Jj0pc=",
+        "owner": "sunnysamantara",
+        "repo": "Konveyor",
+        "rev": "6b2b8e424f9b6b31534d09cc6f536785ade5692d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "sunnysamantara",
+        "ref": "nix",
+        "repo": "Konveyor",
+        "type": "github"
+      }
+    },
     "kwin-effects-better-blur-dx": {
       "inputs": {
         "nixpkgs": [
@@ -393,6 +420,7 @@
         "flake-parts": "flake-parts",
         "home-manager": "home-manager",
         "import-tree": "import-tree",
+        "konveyor": "konveyor",
         "kwin-effects-better-blur-dx": "kwin-effects-better-blur-dx",
         "nix-secrets": "nix-secrets",
         "nixdatifier": "nixdatifier",

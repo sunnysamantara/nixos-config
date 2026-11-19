@@ -33,6 +33,8 @@
       catppuccin
       obsidian
       opencode
+      misterdownloadmanager
+      konveyor
       profile-picture
       devenv
     ];

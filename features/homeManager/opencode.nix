@@ -3,6 +3,10 @@
   flake.modules.homeManager.opencode = { config, pkgs, ... }: {
     programs.opencode = {
       enable = true;
+      # Merge every `programs.mcp.servers.*` entry into OpenCode's own `mcp`
+      # settings. The build-in MCP server (features/homeManager/misterdownloadmanager.nix)
+      # relies on this; without it the server is defined but never handed to OpenCode.
+      enableMcpIntegration = true;
       extraPackages = with pkgs; [
         ripgrep
         fd

@@ -13,6 +13,7 @@
       "kdeconnect"
       "catppuccin"
       "solaar"
+      "konveyor"
     ];
 
     # System services, matching flake.services.<name> in services/

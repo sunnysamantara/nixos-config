@@ -44,6 +44,15 @@
       url = "github:zed-industries/delta-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # Konveyor's fork provides generic NixOS + Home Manager modules. The local
+    # features are thin adapters that import them; follow the shared inputs so
+    # plasma-manager is not pulled in twice.
+    konveyor = {
+      url = "github:sunnysamantara/Konveyor/nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.home-manager.follows = "home-manager";
+      inputs.plasma-manager.follows = "plasma-manager";
+    };
     nix-secrets = {
       url = "git+ssh://git@github.com/sunnysamantara/nix-secrets?ref=main";
     };

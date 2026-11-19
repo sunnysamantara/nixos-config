@@ -23,6 +23,13 @@
       };
     };
 
+    # `qemu.vhostUserPackages` only populates /var/lib/qemu/vhost-user metadata;
+    # libvirt looks up the virtiofsd *binary* by searching PATH (`virtiofsd`, no
+    # compiled-in path), and libvirtd's PATH is fixed in the NixOS module, so
+    # without this a virtiofs share fails with "Cannot find 'virtiofsd' in PATH".
+    # Windows guests need virtiofs: there is no 9p driver for Windows.
+    systemd.services.libvirtd.path = [ pkgs.virtiofsd ];
+
     services.spice-vdagentd.enable = true;
     programs.dconf.enable = true;
 
